@@ -1,0 +1,1 @@
+# state — camada de gerenciamento de estado (desacoplada do Streamlit)
