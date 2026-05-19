@@ -94,6 +94,7 @@ def recompute_total(df: pd.DataFrame) -> dict:
         return {
             "receita": 0, "lucro": 0, "custo": 0,
             "pedidos": 0, "qtd": 0, "frete": 0, "desconto_medio": 0,
+            "vendedores": 0, "qtd_total": 0,
         }
     return {
         "receita": df["Receita"].sum(),
@@ -103,6 +104,8 @@ def recompute_total(df: pd.DataFrame) -> dict:
         "qtd": df["Quantidade"].sum(),
         "frete": df["Frete"].sum(),
         "desconto_medio": df["Desconto_Pct"].mean(),
+        "vendedores": df["Vendedor"].nunique() if "Vendedor" in df.columns else 0,
+        "qtd_total": df["Quantidade"].sum() if "Quantidade" in df.columns else 0,
     }
 
 

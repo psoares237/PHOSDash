@@ -32,11 +32,10 @@ def render_kpis(items: list[tuple], per_row: int = 5) -> None:
     """Renderiza KPIs em linhas de N cards."""
     for idx in range(0, len(items), per_row):
         row = items[idx : idx + per_row]
-        cols = st.columns(len(row))
+        cols = st.columns(len(row), gap="medium")
         for col, item in zip(cols, row):
             with col:
                 metric_card(*item)
-
 
 def section_header(title: str, subtitle: str) -> None:
     """Renderiza header de seção com título e subtítulo."""
@@ -124,21 +123,25 @@ def chart_block(
     fig: go.Figure,
     page_key: str | None = None,
     dimension: str | None = None,
+    description: str = "",
 ) -> None:
-    """Renderiza gráfico com título e suporte a cross-filtering via clique.
+    """Renderiza gráfico com título, subtítulo e suporte a cross-filtering via clique.
 
     Args:
         title: Título do gráfico.
-        subtitle: Descrição do gráfico.
+        subtitle: Subtítulo descritivo (renderizado abaixo do título).
         fig: Figura Plotly.
         page_key: Identificador da página (ex: "overview", "receita").
         dimension: Coluna do DataFrame que será filtrada ao clicar.
+        description: Objetivo estratégico do gráfico (renderizado abaixo do chart).
     """
+    # Build the chart-card header with title + subtitle
+    subtitle_html = f'<div class="chart-subtitle">{subtitle}</div>' if subtitle else ""
     st.markdown(
         f"""
         <div class="chart-card">
             <div class="chart-title">{title}</div>
-            <div class="chart-subtitle">{subtitle}</div>
+            {subtitle_html}
         </div>
         """,
         unsafe_allow_html=True,
@@ -169,4 +172,13 @@ def chart_block(
             use_container_width=True,
             config=config,
             key=chart_key,
+        )
+
+    # Description/objective below the chart
+    if description:
+        st.markdown(
+            f"""
+            <div class="chart-objective">{description}</div>
+            """,
+            unsafe_allow_html=True,
         )

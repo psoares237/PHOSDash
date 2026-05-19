@@ -35,7 +35,7 @@ from utils.formatters import fmt_currency, fmt_pct, fmt_int, pct_change
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DADOS_OFICIAIS = os.path.join(BASE_DIR, "Dados_PHOSDash.xlsx")
 MODELO_DOWNLOAD = os.path.join(BASE_DIR, "Modelo_dados_PHOSDash.xlsx")
-LOGO_SIDEBAR = os.path.join(BASE_DIR, "assets", "gemini")
+LOGO_SIDEBAR = os.path.join(BASE_DIR, "assets", "logo_phos_transparent.png")
 
 COL_MAP = {
     "Valor_Total": "Receita",
@@ -319,15 +319,13 @@ with st.sidebar:
     )
 
 
-if opcao_ano != "Todos":
-    df = df[df["Data"].dt.year == int(opcao_ano)]
+full_df = st.session_state.df
 
 if opcao_ano != "Todos":
-    previous_df = load_data()
-    previous_df = previous_df[previous_df["Data"].dt.year == int(opcao_ano) - 1]
+    df = df[df["Data"].dt.year == int(opcao_ano)]
+    previous_df = full_df[full_df["Data"].dt.year == int(opcao_ano) - 1]
 else:
-    previous_df = load_data()
-    previous_df = previous_df[previous_df["Data"].dt.year == df["Data"].dt.year.max() - 1]
+    previous_df = full_df[full_df["Data"].dt.year == df["Data"].dt.year.max() - 1]
 
 
 st.markdown("# 📊 PHOSDash")
