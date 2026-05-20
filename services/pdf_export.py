@@ -64,17 +64,8 @@ class ExecutivePDF(FPDF):
     def rounded_rect(self, x: float, y: float, w: float, h: float,
                      r: float, style: str = "F", corners: str = "all"):
         """Rect with rounded corners (simplificado)."""
-        # Para simplicidade, usa rect normal com bordas levemente arredondadas
-        # via clipping (não disponível no fpdf2 básico).
-        # Alternativa: usa o método interno de fpdf2 se disponível
-        try:
-            # fpdf2 >= 2.7 tem suporte nativo a rounded_rect via .rect com rx
-            self.set_fill_color(*color)
-            self.set_draw_color(*color)
-            # Fallback: rect normal com cantos vivos (aceitável para PDF executivo)
-            self.rect(x, y, w, h, style)
-        except Exception:
-            self.rect(x, y, w, h, style)
+        # rect normal com cantos vivos (aceitável para PDF executivo)
+        self.rect(x, y, w, h, style)
 
     def text_primary(self, x: float, y: float, text: str, size: float = 10,
                      bold: bool = False, align: str = "L", color: tuple = TEXT_PRIMARY):
