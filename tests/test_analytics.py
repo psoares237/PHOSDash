@@ -99,7 +99,7 @@ class TestInsightsEngine:
         }
         insights = generate_insights(df, total)
         assert len(insights) >= 2
-        assert any(i["title"] == "Receita em destaque" for i in insights)
+        assert any(i["title"] == "Receita" for i in insights)
 
     def test_generate_insights_with_previous(self):
         from services.insights_engine import generate_insights

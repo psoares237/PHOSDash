@@ -7,8 +7,8 @@ from utils.formatters import fmt_pct
 from state.filters import FilterState
 
 
-def metric_card(title: str, value: str, delta: float | None, delta_label: str) -> None:
-    """Renderiza um card de KPI com delta opcional."""
+def metric_card(title: str, value: str, delta: float | None, delta_label: str, icon: str = "📊", metric_id: int = 0) -> None:
+    """Renderiza um card de KPI com delta opcional e borda colorida."""
     if delta is None:
         delta_html = '<div class="metric-delta flat">Sem base comparável</div>'
     else:
@@ -18,10 +18,12 @@ def metric_card(title: str, value: str, delta: float | None, delta_label: str) -
 
     st.markdown(
         f"""
+        <div data-metric-id="{metric_id}">
         <div class="metric-card">
-            <div class="metric-title">{title}</div>
+            <div class="metric-title"><span class="metric-icon">{icon}</span> {title}</div>
             <div class="metric-value">{value}</div>
             {delta_html}
+        </div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -29,13 +31,18 @@ def metric_card(title: str, value: str, delta: float | None, delta_label: str) -
 
 
 def render_kpis(items: list[tuple], per_row: int = 5) -> None:
-    """Renderiza KPIs em linhas de N cards."""
+    """Renderiza KPIs em linhas de N cards com bordas coloridas por posição."""
+    kpi_icons = ["💰", "💵", "🎫", "📊", "📦"]
     for idx in range(0, len(items), per_row):
         row = items[idx : idx + per_row]
         cols = st.columns(len(row), gap="medium")
-        for col, item in zip(cols, row):
+        for j, (col, item) in enumerate(zip(cols, row)):
             with col:
-                metric_card(*item)
+                metric_id = idx + j
+                icon = kpi_icons[metric_id] if metric_id < len(kpi_icons) else "📊"
+                metric_card(*item, icon=icon, metric_id=metric_id)
+    st.markdown("<div style='height: 18px'></div>", unsafe_allow_html=True)
+
 
 def section_header(title: str, subtitle: str) -> None:
     """Renderiza header de seção com título e subtítulo."""
@@ -133,15 +140,17 @@ def chart_block(
         fig: Figura Plotly.
         page_key: Identificador da página (ex: "overview", "receita").
         dimension: Coluna do DataFrame que será filtrada ao clicar.
-        description: Objetivo estratégico do gráfico (renderizado abaixo do chart).
+        description: Objetivo estratégico do gráfico (renderizado abaixo do subtítulo).
     """
-    # Build the chart-card header with title + subtitle
+    # Build the chart-card header: title → subtitle → description (antes do chart)
     subtitle_html = f'<div class="chart-subtitle">{subtitle}</div>' if subtitle else ""
+    desc_html = f'<div class="chart-objective">{description}</div>' if description else ""
     st.markdown(
         f"""
         <div class="chart-card">
             <div class="chart-title">{title}</div>
             {subtitle_html}
+            {desc_html}
         </div>
         """,
         unsafe_allow_html=True,
@@ -172,13 +181,4 @@ def chart_block(
             use_container_width=True,
             config=config,
             key=chart_key,
-        )
-
-    # Description/objective below the chart
-    if description:
-        st.markdown(
-            f"""
-            <div class="chart-objective">{description}</div>
-            """,
-            unsafe_allow_html=True,
         )

@@ -23,11 +23,12 @@ def grouped_sales(df: pd.DataFrame, dimension: str) -> pd.DataFrame:
             Quantidade=("Quantidade", "sum"),
             Desconto_Medio=("Desconto_Pct", "mean"),
             Frete_Medio=("Frete", "mean"),
+            Frete=("Frete", "sum"),
         )
         .sort_values("Receita", ascending=False)
     )
     out["Margem"] = np.where(out["Receita"] != 0, out["Lucro"] / out["Receita"] * 100, 0)
-    out["Lucro_Liquido"] = out["Lucro"] - out["Frete_Medio"] * out["Pedidos"]
+    out["Lucro_Liquido"] = out["Lucro"] - out["Frete"]
     return out
 
 

@@ -1,4 +1,4 @@
-"""Motor de insights automáticos."""
+"""Motor de insights automáticos — formato bubble."""
 
 import pandas as pd
 
@@ -24,36 +24,46 @@ def generate_insights(
     if receita > 0:
         insights.append({
             "icon": "📈",
-            "title": "Receita em destaque",
-            "message": f"A operação movimentou R$ {receita:,.2f}.",
+            "title": "Receita",
+            "value": f"R$ {receita:,.0f}",
+            "tag": "total do período",
+            "severity": "info",
         })
 
     # Ticket médio
     if ticket_medio > 0:
         insights.append({
             "icon": "📊",
-            "title": "Ticket médio monitorado",
-            "message": f"O ticket médio está em R$ {ticket_medio:,.2f} por pedido.",
+            "title": "Ticket Médio",
+            "value": f"R$ {ticket_medio:,.2f}",
+            "tag": "por pedido",
+            "severity": "info",
         })
 
     # Margem
     if margem >= 40:
         insights.append({
-            "icon": "📈",
-            "title": "Rentabilidade excelente",
-            "message": f"A margem operacional de {margem:.1f}% indica alta eficiência na conversão de receita em lucro.",
+            "icon": "✅",
+            "title": "Margem",
+            "value": f"{margem:.1f}%",
+            "tag": "excelente",
+            "severity": "success",
         })
     elif margem >= 25:
         insights.append({
             "icon": "📊",
-            "title": "Margem moderada",
-            "message": f"A margem de {margem:.1f}% está dentro da faixa esperada.",
+            "title": "Margem",
+            "value": f"{margem:.1f}%",
+            "tag": "moderada",
+            "severity": "info",
         })
     elif margem > 0:
         insights.append({
             "icon": "⚠️",
-            "title": "Margem sob pressão",
-            "message": f"A margem de {margem:.1f}% requer atenção sobre custos e precificação.",
+            "title": "Margem",
+            "value": f"{margem:.1f}%",
+            "tag": "sob pressão",
+            "severity": "warning",
         })
 
     # Variação vs período anterior
@@ -64,14 +74,18 @@ def generate_insights(
             if var >= 10:
                 insights.append({
                     "icon": "🚀",
-                    "title": "Crescimento forte",
-                    "message": f"Receita {var:+.1f}% vs. período anterior.",
+                    "title": "Crescimento",
+                    "value": f"{var:+.1f}%",
+                    "tag": "vs. período anterior",
+                    "severity": "success",
                 })
             elif var <= -10:
                 insights.append({
                     "icon": "📉",
-                    "title": "Queda acentuada",
-                    "message": f"Receita {var:+.1f}% vs. período anterior. Investigar causas.",
+                    "title": "Queda",
+                    "value": f"{var:+.1f}%",
+                    "tag": "investigar causas",
+                    "severity": "danger",
                 })
 
     # Frete proporcional
@@ -80,16 +94,20 @@ def generate_insights(
         if frete_pct > 15:
             insights.append({
                 "icon": "🚚",
-                "title": "Frete elevado",
-                "message": f"Frete representa {frete_pct:.1f}% da receita. Avaliar alternativas logísticas.",
+                "title": "Frete",
+                "value": f"{frete_pct:.1f}%",
+                "tag": "da receita",
+                "severity": "warning",
             })
 
     # Desconto médio
     if desconto_medio > 10:
         insights.append({
             "icon": "🏷️",
-            "title": "Descontos acima do normal",
-            "message": f"Desconto médio de {desconto_medio:.1f}% pode estar impactando margem.",
+            "title": "Descontos",
+            "value": f"{desconto_medio:.1f}%",
+            "tag": "médio",
+            "severity": "warning",
         })
 
     # Ticket médio com variação
@@ -98,11 +116,12 @@ def generate_insights(
         if prev_ticket > 0:
             var_ticket = ((ticket_medio - prev_ticket) / prev_ticket) * 100
             if abs(var_ticket) >= 5:
-                direction = "superior" if var_ticket > 0 else "inferior"
                 insights.append({
                     "icon": "💰",
-                    "title": "Variação no ticket médio",
-                    "message": f"Ticket médio {var_ticket:+.1f}% ({direction} ao período anterior).",
+                    "title": "Ticket",
+                    "value": f"{var_ticket:+.1f}%",
+                    "tag": "variação",
+                    "severity": "info" if var_ticket > 0 else "warning",
                 })
 
     return insights

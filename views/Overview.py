@@ -1,7 +1,9 @@
 """Página: Visão Geral (Overview).
 
-Layout executivo em grid, inspirado em dashboards premium:
-3 colunas, cards com título/subtítulo/descrição e leitura executiva compacta.
+Layout executivo aprimorado:
+1. Receita/Lucro com margem + Categoria com top highlight
+2. Vendedor Top 5 + Canal de Venda com margem por canal
+
 Todos os visuais respondem ao cross-filtering via page_key.
 """
 
@@ -10,39 +12,42 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from components.ui import section_header, chart_block
+from components.ui import chart_block
 from components.charts import clean_figure, CHART_COLORS
-from state.filters import FilterState
-from utils.formatters import pct_change
+from utils.formatters import fmt_currency, fmt_pct
 
 
 def render(ctx):
     """Renderiza a página Visão Geral."""
 
-    current_total = ctx.current_total
-    previous_total = ctx.previous_total
     monthly = ctx.monthly
     cat = ctx.cat
-    regiao = ctx.regiao
     canal = ctx.canal
+    vendedor = ctx.vendedor
     top_channel_name = ctx.top_channel_name
     top_channel_share = ctx.top_channel_share
     page_key = ctx.page_key
 
+    # Top category info for subtitle
+    top_cat_name = cat.iloc[0]["Categoria"] if not cat.empty else "—"
+    top_cat_share = (
+        cat.iloc[0]["Receita"] / cat["Receita"].sum() * 100
+    ) if not cat.empty else 0
+
     # ═══════════════════════════════════════
-    # LINHA 1 — visão financeira, categoria e região
+    # LINHA 1 — Receita+Lucro+Margem + Categoria (2 colunas)
     # ═══════════════════════════════════════
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
 
     with col1:
         if monthly is not None and not monthly.empty:
             fig = make_subplots(
-                rows=1,
-                cols=1,
+                rows=1, cols=1,
                 specs=[[{"secondary_y": True}]],
             )
 
+            # Barras: Receita
             fig.add_trace(
                 go.Bar(
                     x=monthly["MesLabel"],
@@ -56,6 +61,7 @@ def render(ctx):
                 secondary_y=False,
             )
 
+            # Linha: Lucro
             fig.add_trace(
                 go.Scatter(
                     x=monthly["MesLabel"],
@@ -70,32 +76,62 @@ def render(ctx):
                 secondary_y=True,
             )
 
+            # Linha tracejada: Margem % (sobre secondary y)
+            fig.add_trace(
+                go.Scatter(
+                    x=monthly["MesLabel"],
+                    y=monthly["Margem"],
+                    name="Margem %",
+                    mode="lines",
+                    line=dict(color=CHART_COLORS[5], width=1.5, dash="dot"),
+                    customdata=monthly["MesLabel"].tolist(),
+                    hovertemplate="Margem: %{y:.1f}%<extra></extra>",
+                ),
+                secondary_y=True,
+            )
+
             fig.update_layout(
                 barmode="group",
                 showlegend=True,
                 xaxis_title="",
-                yaxis_title="",
-                yaxis2_title="",
+                yaxis_title="Receita (R$)",
+                yaxis2_title="Lucro / Margem",
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom", y=1.02,
+                    xanchor="right", x=1,
+                    font=dict(size=11, color="#AAB7C4"),
+                ),
             )
 
-            fig = clean_figure(fig, height=320)
+            fig = clean_figure(fig, height=420)
 
             chart_block(
-                "Receita e Lucro Mensal",
-                "Comparativo financeiro mensal.",
+                "Receita, Lucro e Margem",
+                "Evolução mensal com indicador de rentabilidade.",
                 fig,
                 page_key=page_key,
                 dimension="MesLabel",
                 description=(
-                    "Permite avaliar a evolução conjunta da receita e do lucro, "
-                    "identificando meses de maior rentabilidade e possíveis sazonalidades."
+                    "Visão integrada: barras mostram receita, linha contínua o lucro "
+                    "e linha tracejada a margem %. Identifique meses de alta receita "
+                    "com baixa margem — sinal de custo ou desconto excessivo."
                 ),
             )
 
     with col2:
         if cat is not None and not cat.empty:
+            # Agrupar categorias pequenas como "Outros" para legibilidade
+            cat_top = cat.head(7).copy()
+            outros_receita = cat.iloc[7:]["Receita"].sum() if len(cat) > 7 else 0
+            if outros_receita > 0:
+                cat_top = pd.concat([
+                    cat_top,
+                    pd.DataFrame([{"Categoria": "Outros", "Receita": outros_receita}]),
+                ])
+
             fig_cat = px.pie(
-                cat,
+                cat_top,
                 values="Receita",
                 names="Categoria",
                 color_discrete_sequence=CHART_COLORS,
@@ -104,180 +140,161 @@ def render(ctx):
 
             fig_cat.update_traces(
                 textposition="inside",
-                textinfo="percent",
-                customdata=cat["Categoria"].tolist(),
-                hovertemplate="%{label}: R$ %{value:,.2f}<extra></extra>",
+                textinfo="percent+label",
+                textfont_size=11,
+                customdata=cat_top["Categoria"].tolist(),
+                hovertemplate="%{label}: R$ %{value:,.2f} (%{percent})<extra></extra>",
+                sort=False,
             )
 
-            fig_cat = clean_figure(fig_cat, height=320)
+            fig_cat = clean_figure(fig_cat, height=420)
 
             chart_block(
                 "Receita por Categoria",
-                "Participação das categorias no faturamento.",
+                f"Destaque: {top_cat_name} com {top_cat_share:.1f}% da receita.",
                 fig_cat,
                 page_key=page_key,
                 dimension="Categoria",
                 description=(
-                    "Ajuda a identificar concentração de receita, dependência de categorias "
-                    "e oportunidades de diversificação comercial."
+                    "Concentração de receita por categoria. Se uma categoria representa "
+                    "mais de 30%, há risco de dependência. Categorias pequenas agrupadas "
+                    "em 'Outros' para legibilidade."
                 ),
             )
+
+    # ═══════════════════════════════════════
+    # LINHA 2 — Vendedor Top 5 + Canal com Margem (2 colunas)
+    # ═══════════════════════════════════════
+
+    col3, col4 = st.columns(2)
 
     with col3:
-        if regiao is not None and not regiao.empty:
-            fig_reg = px.pie(
-                regiao,
-                values="Receita",
-                names="Regiao",
-                color_discrete_sequence=CHART_COLORS,
-                hole=0.50,
-            )
+        if vendedor is not None and not vendedor.empty:
+            vend_top = vendedor.head(5)
 
-            fig_reg.update_traces(
-                textposition="inside",
-                textinfo="percent",
-                customdata=regiao["Regiao"].tolist(),
-                hovertemplate="%{label}: R$ %{value:,.2f}<extra></extra>",
-            )
-
-            fig_reg = clean_figure(fig_reg, height=320)
-
-            chart_block(
-                "Receita por Região",
-                "Distribuição geográfica da receita.",
-                fig_reg,
-                page_key=page_key,
-                dimension="Regiao",
-                description=(
-                    "Mostra quais regiões sustentam o faturamento e onde existem "
-                    "oportunidades de expansão ou risco de concentração."
-                ),
-            )
-
-    # ═══════════════════════════════════════
-    # LINHA 2 — canal e leitura executiva
-    # ═══════════════════════════════════════
-
-    col4, col5 = st.columns([2, 1])
-
-    with col4:
-        if canal is not None and not canal.empty:
-            fig_canal = px.bar(
-                canal.head(8),
-                x="Canal_Venda",
+            fig_vend = px.bar(
+                vend_top,
+                x="Vendedor",
                 y="Receita",
-                color_discrete_sequence=[CHART_COLORS[0]],
+                color="Margem",
+                color_continuous_scale=[
+                    "#F87171",  # baixa margem
+                    "#d3b73e",  # média
+                    "#357560",  # alta
+                ],
                 text="Receita",
             )
 
-            fig_canal.update_traces(
-                texttemplate="%{text:,.2s}",
+            fig_vend.update_traces(
+                texttemplate="R$ %{text:,.2s}",
                 textposition="outside",
-                customdata=canal.head(8)["Canal_Venda"].tolist(),
-                hovertemplate="Canal: %{x}<br>Receita: R$ %{y:,.2f}<extra></extra>",
+                customdata=vend_top["Vendedor"].tolist(),
+                hovertemplate=(
+                    "%{x}<br>Receita: R$ %{y:,.2f}<br>"
+                    "Margem: %{marker.color:.1f}%<extra></extra>"
+                ),
+                marker=dict(
+                    line=dict(width=0),
+                    colorbar=dict(
+                        title="Margem %",
+                        tickfont=dict(color="#AAB7C4"),
+                        title_font=dict(color="#AAB7C4"),
+                    ),
+                ),
             )
 
-            fig_canal.update_layout(
+            fig_vend.update_layout(
                 showlegend=False,
                 xaxis_title="",
                 yaxis_title="Receita (R$)",
             )
 
-            fig_canal = clean_figure(fig_canal, height=320)
+            fig_vend = clean_figure(fig_vend, height=420)
 
             chart_block(
-                "Receita por Canal de Venda",
-                f"Destaque: {top_channel_name} com {top_channel_share:.1f}% da receita.",
+                "Top 5 Vendedores",
+                "Performance por vendedor — cor indica margem.",
+                fig_vend,
+                page_key=page_key,
+                dimension="Vendedor",
+                description=(
+                    "Receita (tamanho da barra) vs Margem (cor: verde=alta, "
+                    "vermelho=baixa). Vendedores com alta receita e baixa margem "
+                    "podem estar usando desconto excessivo para vender."
+                ),
+            )
+
+    with col4:
+        if canal is not None and not canal.empty:
+            # Canal com duplo eixo: Receita (barra) + Margem % (bolinha)
+            fig_canal = make_subplots(specs=[[{"secondary_y": True}]])
+
+            fig_canal.add_trace(
+                go.Bar(
+                    x=canal["Canal_Venda"],
+                    y=canal["Receita"],
+                    name="Receita",
+                    marker_color=CHART_COLORS[0],
+                    marker_line_width=0,
+                    customdata=canal["Canal_Venda"].tolist(),
+                    hovertemplate="%{x}: R$ %{y:,.2f}<extra></extra>",
+                ),
+                secondary_y=False,
+            )
+
+            fig_canal.add_trace(
+                go.Scatter(
+                    x=canal["Canal_Venda"],
+                    y=canal["Margem"],
+                    name="Margem %",
+                    mode="markers+text",
+                    marker=dict(
+                        size=canal["Margem"] * 1.2 + 8,
+                        color=canal["Margem"].apply(
+                            lambda m: "#357560" if m >= 35
+                            else "#d3b73e" if m >= 25
+                            else "#F87171"
+                        ),
+                        line=dict(width=1.5, color="#1a2a3a"),
+                    ),
+                    text=[f"{m:.1f}%" for m in canal["Margem"]],
+                    textposition="top center",
+                    textfont=dict(size=11, color="#F7FAFC"),
+                    customdata=canal["Canal_Venda"].tolist(),
+                    hovertemplate="%{x}: Margem %{y:.1f}%<extra></extra>",
+                ),
+                secondary_y=True,
+            )
+
+            fig_canal.update_layout(
+                barmode="group",
+                showlegend=True,
+                xaxis_title="",
+                yaxis_title="Receita (R$)",
+                yaxis2_title="Margem (%)",
+                legend=dict(
+                    orientation="h",
+                    yanchor="bottom", y=1.02,
+                    xanchor="right", x=1,
+                    font=dict(size=11, color="#AAB7C4"),
+                ),
+            )
+
+            fig_canal = clean_figure(fig_canal, height=420)
+
+            chart_block(
+                "Receita e Margem por Canal",
+                f"Destaque: {top_channel_name} — {top_channel_share:.1f}% da receita.",
                 fig_canal,
                 page_key=page_key,
                 dimension="Canal_Venda",
                 description=(
-                    "Permite avaliar dependência de canais, eficiência comercial "
-                    "e oportunidades de fortalecimento ou diversificação de vendas."
+                    "Barras mostram volume de receita. Bolas mostram margem % "
+                    "(verde ≥35%, amarelo ≥25%, vermelho <25%). Canais com muita "
+                    "receita e margem baixa precisam de revisão de precificação."
                 ),
             )
 
-    with col5:
-        _render_leitura_executiva(ctx)
 
-
-def _render_leitura_executiva(ctx):
-    """Renderiza leitura executiva compacta em card."""
-
-    current_total = ctx.current_total
-    previous_total = ctx.previous_total
-    cat = ctx.cat
-    regiao = ctx.regiao
-    canal = ctx.canal
-    page_key = ctx.page_key
-
-    receita = current_total.get("receita", 0)
-    lucro = current_total.get("lucro", 0)
-    margem = (lucro / receita * 100) if receita else 0
-
-    if margem >= 40:
-        margem_msg = f"Margem forte ({margem:.1f}%)."
-    elif margem >= 25:
-        margem_msg = f"Margem moderada ({margem:.1f}%)."
-    elif margem > 0:
-        margem_msg = f"Margem sob pressão ({margem:.1f}%)."
-    else:
-        margem_msg = "Margem não calculável."
-
-    prev_receita = previous_total.get("receita", 0) if previous_total else 0
-
-    if prev_receita > 0:
-        var = pct_change(receita, prev_receita)
-        crescimento_msg = (
-            f"Receita {var:+.1f}% vs. período anterior."
-            if var is not None
-            else "Sem base comparável."
-        )
-    else:
-        crescimento_msg = "Sem base comparável."
-
-    alertas = []
-
-    if cat is not None and not cat.empty:
-        top_cat_share = cat.iloc[0]["Receita"] / cat["Receita"].sum() * 100
-        if top_cat_share >= 40:
-            alertas.append(
-                f"Categoria dominante: {cat.iloc[0]['Categoria']} ({top_cat_share:.1f}%)."
-            )
-
-    if regiao is not None and not regiao.empty:
-        top_reg_share = regiao.iloc[0]["Receita"] / regiao["Receita"].sum() * 100
-        if top_reg_share >= 50:
-            alertas.append(
-                f"Concentração regional: {regiao.iloc[0]['Regiao']} ({top_reg_share:.1f}%)."
-            )
-
-    if canal is not None and not canal.empty:
-        top_canal_share = canal.iloc[0]["Receita"] / canal["Receita"].sum() * 100
-        if top_canal_share >= 60:
-            alertas.append(
-                f"Dependência de canal: {canal.iloc[0]['Canal_Venda']} ({top_canal_share:.1f}%)."
-            )
-
-    fs = FilterState(page_key)
-
-    st.markdown(
-        """
-<div class="chart-card">
-    <div class="chart-title">Leitura Executiva</div>
-    <div class="chart-subtitle">Resumo automático dos principais sinais da operação.</div>
-""",
-        unsafe_allow_html=True,
-    )
-
-    st.markdown(f"📊 **{margem_msg}**")
-    st.markdown(f"📈 **{crescimento_msg}**")
-
-    for alerta in alertas:
-        st.markdown(f"⚠️ {alerta}")
-
-    if fs.has_filters:
-        filtros_str = ", ".join(f"{k}: {v}" for k, v in fs.filters.items())
-        st.markdown(f"🔍 *Dados filtrados por: {filtros_str}*")
-
-    st.markdown("</div>", unsafe_allow_html=True)
+# Import local para compatibilidade
+import pandas as pd
