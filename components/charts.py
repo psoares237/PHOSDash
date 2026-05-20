@@ -2,18 +2,7 @@
 
 import plotly.graph_objects as go
 
-
-# Cores oficiais do PHOSDash (dark theme)
-CHART_COLORS = [
-    "#2c6b96",  # Azul principal
-    "#d3b73e",  # Dourado
-    "#357560",  # Verde
-    "#cabdaf",  # Areia
-    "#384727",  # Verde escuro
-    "#8B5CF6",  # Roxo
-    "#F87171",  # Vermelho suave
-    "#60A5FA",  # Azul claro
-]
+from core.config import CHART_COLORS  # noqa: F401 — re-exportado por compatibilidade
 
 
 def clean_figure(fig: go.Figure, height: int = 380) -> go.Figure:

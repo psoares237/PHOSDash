@@ -205,6 +205,62 @@ def render(ctx):
                 )
 
     # ═══════════════════════════════════════
+    # YoY — Variação Year-over-Year
+    # ═══════════════════════════════════════
+
+    if monthly is not None and not monthly.empty and "Receita_YoY_Pct" in monthly.columns:
+        yoy_data = monthly.dropna(subset=["Receita_YoY_Pct"]).copy()
+
+        if not yoy_data.empty:
+            yoy_colors = [
+                CHART_COLORS[2] if v >= 0 else CHART_COLORS[6]
+                for v in yoy_data["Receita_YoY_Pct"]
+            ]
+
+            fig_yoy = go.Figure()
+
+            fig_yoy.add_trace(
+                go.Bar(
+                    x=yoy_data["MesLabel"],
+                    y=yoy_data["Receita_YoY_Pct"],
+                    marker_color=yoy_colors,
+                    marker_line_width=0,
+                    customdata=yoy_data["MesLabel"].tolist(),
+                    hovertemplate="%{x}: %{y:+.1f}%<extra></extra>",
+                )
+            )
+
+            fig_yoy.add_hline(
+                y=0, line_dash="solid", line_color="rgba(255,255,255,0.15)",
+                line_width=1,
+            )
+
+            fig_yoy.update_layout(
+                showlegend=False,
+                xaxis_title="",
+                yaxis_title="Variação YoY (%)",
+            )
+
+            fig_yoy = clean_figure(fig_yoy, height=380)
+
+            avg_yoy = yoy_data["Receita_YoY_Pct"].mean()
+            pos_yoy = (yoy_data["Receita_YoY_Pct"] > 0).sum()
+            total_yoy = len(yoy_data)
+
+            chart_block(
+                "Variação Ano a Ano (YoY)",
+                f"Média: {avg_yoy:+.1f}% | {pos_yoy}/{total_yoy} meses positivos",
+                fig_yoy,
+                page_key=page_key,
+                dimension="MesLabel",
+                description=(
+                    "Comparação com o mesmo mês do ano anterior. "
+                    "Barras verdes = crescimento YoY, vermelhas = retração. "
+                    "Identifique tendências de longo prazo e sazonalidade."
+                ),
+            )
+
+    # ═══════════════════════════════════════
     # LINHA 2 — Região + Lucro Líquido por Canal (2 colunas)
     # ═══════════════════════════════════════
 

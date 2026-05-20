@@ -16,6 +16,7 @@ from services.kpi_service import (
     hhi_by_dimensions, desconto_margem_correlation,
     run_rate_projection, forma_pagamento_analysis,
     sazonalidade_analysis, margem_contribuicao,
+    produto_margem_analysis,
 )
 from services.analytics_service import grouped_sales
 
@@ -43,8 +44,9 @@ def render(ctx):
     margem_contrib_pct = (margem_contrib / receita * 100) if receita else 0
     frete_pct = (frete_total / receita * 100) if receita else 0
 
-    # Run Rate
-    proj = run_rate_projection(monthly)
+    # Run Rate — com e sem ajuste sazonal
+    saz = sazonalidade_analysis(monthly)
+    proj = run_rate_projection(monthly, saz)
     tendencia_icon = {"crescimento": "📈", "queda": "📉", "estável": "➡️"}.get(
         proj["tendencia"], "➡️"
     )
@@ -336,10 +338,7 @@ def render(ctx):
                 )
 
     with col6:
-        if monthly is not None and not monthly.empty:
-            saz = sazonalidade_analysis(monthly)
-
-            if not saz.empty:
+        if monthly is not None and not monthly.empty and saz is not None and not saz.empty:
                 fig_saz = go.Figure()
 
                 fig_saz.add_trace(
@@ -395,6 +394,355 @@ def render(ctx):
                         "Identifica meses de pico e vale ao longo do ano. "
                         "Use para planejar estoque, campanhas e metas mensais. "
                         "A faixa mostra a dispersão histórica (±1 desvio padrão)."
+                    ),
+                )
+
+    # ═══════════════════════════════════════
+    # LINHA 3.5 — Run Rate: Simples vs Ajustado
+    # ═══════════════════════════════════════
+
+    if proj.get("tem_sazonalidade"):
+        st.markdown("<div style='height: 16px'></div>", unsafe_allow_html=True)
+
+        rr_df = pd.DataFrame({
+            "Período": ["3 meses", "6 meses", "12 meses"],
+            "Projeção Simples": [
+                proj["run_rate_3m"],
+                proj["run_rate_6m"],
+                proj["run_rate_12m"],
+            ],
+            "Projeção Ajustada": [
+                proj["run_rate_3m_ajustado"],
+                proj["run_rate_6m_ajustado"],
+                proj["run_rate_12m_ajustado"],
+            ],
+        })
+
+        fig_rr = go.Figure()
+
+        fig_rr.add_trace(
+            go.Scatter(
+                x=rr_df["Período"],
+                y=rr_df["Projeção Simples"],
+                mode="lines+markers",
+                name="Projeção Simples",
+                line=dict(color=CHART_COLORS[0], width=3),
+                marker=dict(size=10, symbol="circle"),
+                hovertemplate="Simples (%{x}): %{y:$,.2f}<extra></extra>",
+            )
+        )
+
+        fig_rr.add_trace(
+            go.Scatter(
+                x=rr_df["Período"],
+                y=rr_df["Projeção Ajustada"],
+                mode="lines+markers",
+                name="Projeção Ajustada",
+                line=dict(color=CHART_COLORS[6], width=3, dash="dash"),
+                marker=dict(size=10, symbol="diamond"),
+                hovertemplate="Ajustada (%{x}): %{y:$,.2f}<extra></extra>",
+            )
+        )
+
+        # Diferença percentual anotada em cada ponto
+        for i, row in rr_df.iterrows():
+            diff = (
+                (row["Projeção Ajustada"] - row["Projeção Simples"])
+                / row["Projeção Simples"] * 100
+                if row["Projeção Simples"]
+                else 0
+            )
+            fig_rr.add_annotation(
+                x=row["Período"],
+                y=max(row["Projeção Simples"], row["Projeção Ajustada"]),
+                text=f"{diff:+.1f}%",
+                showarrow=False,
+                yshift=25,
+                font=dict(
+                    size=11,
+                    color="#357560" if diff > 0 else "#F87171" if diff < 0 else "#AAB7C4",
+                ),
+            )
+
+        fig_rr.update_layout(
+            showlegend=True,
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1,
+            ),
+            xaxis_title="",
+            yaxis_title="Receita Anual Projetada (R$)",
+            hovermode="x unified",
+        )
+
+        fig_rr = clean_figure(fig_rr, height=380)
+
+        chart_block(
+            "Run Rate: Simples vs Ajustado (Sazonal)",
+            (
+                proj.get("insight", "")
+                if proj.get("insight")
+                else "Comparação entre projeção com média simples e com ajuste sazonal."
+            ),
+            fig_rr,
+            description=(
+                "A projeção simples usa a média móvel dos últimos meses. "
+                "A projeção ajustada remove o efeito sazonal de cada mês "
+                "(divide a receita pelo fator sazonal do mês) antes de projetar. "
+                "Diferenças significativas indicam que a sazonalidade está "
+                "distorcendo a projeção baseada em média simples."
+            ),
+        )
+
+    # ═══════════════════════════════════════
+    # LINHA 4 — Pareto de Produtos (80/20)
+    # ═══════════════════════════════════════
+
+    if df is not None and not df.empty and "Produto" in df.columns:
+        pareto_df = grouped_sales(df, "Produto").head(30)
+
+        if not pareto_df.empty:
+            total_receita = pareto_df["Receita"].sum()
+            pareto_df["Pct_Receita"] = pareto_df["Receita"] / total_receita * 100
+            pareto_df["Cumulativo"] = pareto_df["Pct_Receita"].cumsum()
+            pareto_df["Pareto_80"] = pareto_df["Cumulativo"] <= 80
+
+            top_80_count = int(pareto_df["Pareto_80"].sum())
+            top_20_count = max(int(len(pareto_df) * 0.2), 1)
+            top_20_pct = pareto_df.head(top_20_count)["Pct_Receita"].sum()
+
+            fig_pareto = go.Figure()
+
+            # Barras com destaque para produtos dentro da faixa 80%
+            bar_colors = [
+                CHART_COLORS[0] if v else "#4a6a85"
+                for v in pareto_df["Pareto_80"]
+            ]
+
+            fig_pareto.add_trace(
+                go.Bar(
+                    x=pareto_df["Produto"],
+                    y=pareto_df["Receita"],
+                    name="Receita",
+                    marker_color=bar_colors,
+                    customdata=pareto_df["Pct_Receita"],
+                    hovertemplate=(
+                        "%{x}: R$ %{y:,.2f}<br>"
+                        "%{customdata:.1f}% da receita<extra></extra>"
+                    ),
+                )
+            )
+
+            # Linha acumulada no eixo secundário
+            fig_pareto.add_trace(
+                go.Scatter(
+                    x=pareto_df["Produto"],
+                    y=pareto_df["Cumulativo"],
+                    name="% Acumulado",
+                    mode="lines+markers",
+                    line=dict(color=CHART_COLORS[6], width=2.2),
+                    marker=dict(size=5, color=CHART_COLORS[6]),
+                    yaxis="y2",
+                    hovertemplate="%{x}: %{y:.1f}% acumulado<extra></extra>",
+                )
+            )
+
+            # Linha de referência 80%
+            fig_pareto.add_hline(
+                y=80,
+                line_dash="dash",
+                line_color=CHART_COLORS[1],
+                annotation_text="80%",
+                annotation_position="right",
+            )
+
+            # Anotação do percentual exato dos top 20%
+            fig_pareto.add_annotation(
+                x=0.98,
+                y=0.95,
+                xref="paper",
+                yref="paper",
+                text=f"Top 20% produtos = {top_20_pct:.1f}% da receita",
+                showarrow=False,
+                font=dict(color=CHART_COLORS[1], size=12),
+                bgcolor="rgba(15,23,42,0.85)",
+                bordercolor=CHART_COLORS[1],
+                borderwidth=1,
+                borderpad=8,
+            )
+
+            fig_pareto.update_layout(
+                showlegend=False,
+                xaxis_title="",
+                yaxis_title="Receita (R$)",
+                yaxis2=dict(
+                    title="% Acumulado",
+                    overlaying="y",
+                    side="right",
+                    range=[0, 105],
+                    tickfont=dict(color="#AAB7C4"),
+                    gridcolor="rgba(255,255,255,0.03)",
+                ),
+                hovermode="x unified",
+            )
+
+            fig_pareto = clean_figure(fig_pareto, height=440)
+
+            chart_block(
+                "Pareto de Produtos — Regra 80/20",
+                f"{top_80_count} produtos concentram 80% da receita ({len(pareto_df)} analisados).",
+                fig_pareto,
+                page_key=page_key,
+                dimension="Produto",
+                description=(
+                    "O Princípio de Pareto revela que poucos produtos geram a maior "
+                    "parte da receita. Produtos em azul compõem os 80% acumulados — "
+                    "priorize estoque, marketing e negociação para este grupo. Produtos "
+                    "à direita da linha de 80% são candidatos a revisão de sortimento "
+                    "ou descontinuação."
+                ),
+            )
+
+    # ═══════════════════════════════════════
+    # LINHA 5 — Margem Unitária por Produto (Preço × Custo)
+    # ═══════════════════════════════════════
+
+    if df is not None and not df.empty and "Produto" in df.columns:
+        prod_margem = produto_margem_analysis(df)
+
+        if not prod_margem.empty:
+            col7, col8 = st.columns(2)
+
+            # ── Top 10 menor margem (risco) ──
+            risco_df = prod_margem.tail(10).sort_values("Margem_Pct", ascending=True)
+            n_neg = int((risco_df["Margem_Pct"] < 0).sum())
+
+            with col7:
+                risco_colors = [
+                    "#F87171" if v < 0 else "#d3b73e"
+                    for v in risco_df["Margem_Pct"]
+                ]
+
+                fig_risco = px.bar(
+                    risco_df,
+                    x="Margem_Pct",
+                    y="Produto",
+                    orientation="h",
+                    color_discrete_sequence=[CHART_COLORS[6]],
+                )
+
+                fig_risco.update_traces(
+                    marker_color=risco_colors,
+                    text=[f"{v:.1f}%" for v in risco_df["Margem_Pct"]],
+                    textposition="outside",
+                    customdata=risco_df[["Preco_Medio", "Custo_Medio", "Receita_Total"]].values.tolist(),
+                    hovertemplate=(
+                        "%{y}<br>"
+                        "Margem: %{x:.1f}%<br>"
+                        "Preço Médio: R$ %{customdata[0]:,.2f}<br>"
+                        "Custo Médio: R$ %{customdata[1]:,.2f}<br>"
+                        "Receita Total: R$ %{customdata[2]:,.2f}<extra></extra>"
+                    ),
+                )
+
+                fig_risco.add_vline(
+                    x=0, line_dash="solid", line_color="#F87171",
+                    line_width=2, annotation_text="break-even",
+                )
+
+                fig_risco.update_layout(
+                    showlegend=False,
+                    xaxis_title="Margem Unitaria (%)",
+                    yaxis_title="",
+                )
+
+                fig_risco = clean_figure(fig_risco, height=380)
+
+                risco_subtitle = (
+                    f"{n_neg} produto(s) com margem negativa ⚠️"
+                    if n_neg > 0
+                    else "Nenhum produto com margem negativa ✅"
+                )
+
+                chart_block(
+                    "Top 10 — Menor Margem (Risco)",
+                    risco_subtitle,
+                    fig_risco,
+                    page_key=page_key,
+                    dimension="Produto",
+                    description=(
+                        "Produtos com menor margem unitária percentual. "
+                        "Margens negativas (abaixo de 0%) indicam prejuízo "
+                        "por unidade — candidatos urgentes a revisão de preço, "
+                        "redução de custo ou descontinuação."
+                    ),
+                )
+
+            # ── Top 10 maior margem (destaque) ──
+            destaque_df = prod_margem.head(10)
+
+            with col8:
+                destaque_colors = [
+                    CHART_COLORS[2] if v >= 50 else CHART_COLORS[0]
+                    for v in destaque_df["Margem_Pct"]
+                ]
+
+                fig_destaque = px.bar(
+                    destaque_df,
+                    x="Margem_Pct",
+                    y="Produto",
+                    orientation="h",
+                    color_discrete_sequence=[CHART_COLORS[2]],
+                )
+
+                fig_destaque.update_traces(
+                    marker_color=destaque_colors,
+                    text=[f"{v:.1f}%" for v in destaque_df["Margem_Pct"]],
+                    textposition="outside",
+                    customdata=destaque_df[["Preco_Medio", "Custo_Medio", "Receita_Total"]].values.tolist(),
+                    hovertemplate=(
+                        "%{y}<br>"
+                        "Margem: %{x:.1f}%<br>"
+                        "Preço Médio: R$ %{customdata[0]:,.2f}<br>"
+                        "Custo Médio: R$ %{customdata[1]:,.2f}<br>"
+                        "Receita Total: R$ %{customdata[2]:,.2f}<extra></extra>"
+                    ),
+                )
+
+                fig_destaque.add_vline(
+                    x=50, line_dash="dash", line_color="#357560",
+                    annotation_text="50%",
+                )
+
+                fig_destaque.update_layout(
+                    showlegend=False,
+                    xaxis_title="Margem Unitaria (%)",
+                    yaxis_title="",
+                )
+
+                fig_destaque = clean_figure(fig_destaque, height=380)
+
+                high_margin_count = int((destaque_df["Margem_Pct"] >= 50).sum())
+                destaque_subtitle = (
+                    f"{high_margin_count} produto(s) com margem ≥ 50% 🌟"
+                    if high_margin_count > 0
+                    else "Produtos com melhor margem do portfólio"
+                )
+
+                chart_block(
+                    "Top 10 — Maior Margem (Destaque)",
+                    destaque_subtitle,
+                    fig_destaque,
+                    page_key=page_key,
+                    dimension="Produto",
+                    description=(
+                        "Produtos com maior margem unitária percentual. "
+                        "Margens acima de 50% representam alta rentabilidade "
+                        "por unidade — candidatos a investimento em marketing, "
+                        "estoque e expansão de canais."
                     ),
                 )
 
@@ -470,6 +818,20 @@ def _render_leitura_financeira(ctx, receita, prev_receita, margem_contrib_pct,
     html += f'<span class="exec-metric-label">Run Rate Projetado (12m)</span>'
     html += f'<span class="exec-metric-value">{fmt_currency(proj["run_rate_12m"])}</span>'
     html += '</div>'
+
+    if proj.get("tem_sazonalidade"):
+        diff_pct = (
+            (proj["run_rate_12m_ajustado"] - proj["run_rate_12m"])
+            / proj["run_rate_12m"] * 100
+            if proj["run_rate_12m"]
+            else 0
+        )
+        saz_dot = "good" if diff_pct > 5 else "warn" if diff_pct < -5 else "info"
+        html += '<div class="exec-metric">'
+        html += f'<span class="exec-dot {saz_dot}"></span>'
+        html += f'<span class="exec-metric-label">Run Rate Ajustado (12m)</span>'
+        html += f'<span class="exec-metric-value">{fmt_currency(proj["run_rate_12m_ajustado"])} ({diff_pct:+.1f}%)</span>'
+        html += '</div>'
 
     if fs.has_filters:
         filtros_str = ", ".join(f"{k}: {v}" for k, v in fs.filters.items())

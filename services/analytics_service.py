@@ -62,6 +62,14 @@ def monthly_sales(df: pd.DataFrame) -> pd.DataFrame:
     monthly["Acumulado_Lucro"] = monthly["Lucro"].cumsum()
     monthly["MoM_Receita"] = monthly["Receita"].pct_change() * 100
     monthly["MoM_Lucro"] = monthly["Lucro"].pct_change() * 100
+    # YoY (Year-over-Year) — comparação com mesmo mês do ano anterior
+    monthly["Receita_Mes_Anterior_Ano"] = monthly["Receita"].shift(12)
+    monthly["Receita_YoY_Var"] = monthly["Receita"] - monthly["Receita_Mes_Anterior_Ano"]
+    monthly["Receita_YoY_Pct"] = np.where(
+        monthly["Receita_Mes_Anterior_Ano"].notna() & (monthly["Receita_Mes_Anterior_Ano"] != 0),
+        (monthly["Receita"] - monthly["Receita_Mes_Anterior_Ano"]) / monthly["Receita_Mes_Anterior_Ano"] * 100,
+        np.nan,
+    )
     monthly["Ano"] = monthly["Data"].dt.year
     monthly["MesNumero"] = monthly["Data"].dt.month
     monthly["MesLabel"] = monthly["Data"].apply(month_label)
