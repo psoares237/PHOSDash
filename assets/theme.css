@@ -604,6 +604,29 @@ div[data-baseweb="select"] * { cursor: pointer !important; }
     color: var(--color-gold);
     letter-spacing: 0.04em;
 }
+.feedback-header-btn {
+    margin-left: auto;
+    padding: 8px 20px;
+    background: linear-gradient(135deg, var(--color-primary), #1a5276);
+    color: var(--text-primary);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    letter-spacing: 0.03em;
+    transition: all 0.25s ease;
+    border: 1px solid rgba(211,183,62,0.3);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.feedback-header-btn:hover {
+    background: linear-gradient(135deg, #3a8bc0, var(--color-primary));
+    border-color: var(--color-gold);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(44,107,150,0.4);
+    text-decoration: none;
+    color: #fff;
+}
 
 /* ═══════════════════════════════════════════
    PESQUISA DE FEEDBACK

@@ -196,18 +196,6 @@ def render_sidebar(config: Config) -> dict[str, Any]:
     st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
 
     # ── Rodapé ──
-    # Botão de Feedback (leva à página oculta)
-    st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
-    st.markdown(
-        '<a href="/dash/Feedback" target="_self" style="text-decoration:none;">'
-        '<button style="width:100%;padding:10px;background:#2c6b96;color:#ece8e6;'
-        'border:none;border-radius:6px;cursor:pointer;font-size:14px;">'
-        '📋 Dar Feedback</button></a>',
-        unsafe_allow_html=True,
-    )
-    st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
-
-    # ── Rodapé ──
     _render_footer()
 
     return {
