@@ -95,6 +95,7 @@ class AlertEngine:
         self, current_total: dict
     ) -> Optional[Alert]:
         """Verifica se a margem bruta está abaixo do mínimo."""
+        # TODO: revisar redundância com alerta Desconto Médio — margem baixa pode ter causa raiz em desconto elevado
         receita = current_total.get("receita", 0)
         lucro = current_total.get("lucro", 0)
         if receita <= 0:
@@ -173,7 +174,9 @@ class AlertEngine:
                 message=(
                     f"{len(bad_months)} meses com variação MoM abaixo de "
                     f"{threshold:+.0f}%. Pior mês: {mes_label} "
-                    f"({worst['MoM_Receita']:+.1f}%)."
+                    f"({worst['MoM_Receita']:+.1f}%). "
+                    f"MoM = variação da receita vs mês anterior. "
+                    f"Alerta quando queda > {abs(threshold):.0f}%."
                 ),
                 value=round(worst["MoM_Receita"], 2),
                 threshold=threshold,
@@ -187,7 +190,9 @@ class AlertEngine:
                     message=(
                         f"{mes_label}: variação MoM de "
                         f"{row['MoM_Receita']:+.1f}% "
-                        f"(limite: {threshold:+.0f}%)."
+                        f"(limite: {threshold:+.0f}%). "
+                        f"MoM = variação da receita vs mês anterior. "
+                        f"Alerta quando queda > {abs(threshold):.0f}%."
                     ),
                     value=round(row["MoM_Receita"], 2),
                     threshold=threshold,
@@ -198,6 +203,7 @@ class AlertEngine:
         self, df: pd.DataFrame
     ) -> list[Alert]:
         """Verifica concentração (HHI) por dimensões relevantes."""
+        # TODO: revisar redundância entre dimensões (Categoria, Canal_Venda, Regiao, Vendedor) — múltiplos alertas de HHI podem ser sobrepostos
         threshold = self.thresholds["concentracao_hhi_max"]
         alerts: list[Alert] = []
         if df is None or df.empty:
@@ -213,7 +219,8 @@ class AlertEngine:
                     severity="warning" if hhi < 4000 else "critical",
                     message=(
                         f"HHI de {dim} = {hhi:.0f} (>{threshold:.0f}). "
-                        f"Risco de dependência."
+                        f"HHI mede concentração de receita entre canais. "
+                        f">2500 indica risco de dependência."
                     ),
                     value=round(hhi, 2),
                     threshold=threshold,
@@ -224,6 +231,7 @@ class AlertEngine:
         self, current_total: dict
     ) -> Optional[Alert]:
         """Verifica se o desconto médio está acima do máximo tolerado."""
+        # TODO: revisar redundância com alerta Margem Bruta — desconto elevado reduz margem
         desconto = current_total.get("desconto_medio", 0)
         threshold = self.thresholds["desconto_pct_max"]
         if desconto > threshold:
@@ -322,64 +330,90 @@ def render_active_alerts(alerts: list[Alert]) -> None:
         unsafe_allow_html=True,
     )
 
-    # Agrupa por severidade para ordenação visual
-    for alert in alerts:
-        severity_color = {
-            "critical": "rgba(248, 113, 113, 0.15)",
-            "warning": "rgba(251, 191, 36, 0.12)",
-            "info": "rgba(96, 165, 250, 0.10)",
-        }.get(alert.severity, "rgba(170,183,196,0.10)")
+    # Grid 2 colunas x N linhas
+    n = len(alerts)
+    for row_start in range(0, n, 2):
+        cols = st.columns(2)
+        for col_offset in range(2):
+            idx = row_start + col_offset
+            if idx >= n:
+                break
+            alert = alerts[idx]
+            with cols[col_offset]:
+                severity_color = {
+                    "critical": "rgba(248, 113, 113, 0.15)",
+                    "warning": "rgba(251, 191, 36, 0.12)",
+                    "info": "rgba(96, 165, 250, 0.10)",
+                }.get(alert.severity, "rgba(170,183,196,0.10)")
 
-        border_color = {
-            "critical": "#F87171",
-            "warning": "#d3b73e",
-            "info": "#60A5FA",
-        }.get(alert.severity, "#AAB7C4")
+                border_color = {
+                    "critical": "#F87171",
+                    "warning": "#d3b73e",
+                    "info": "#60A5FA",
+                }.get(alert.severity, "#AAB7C4")
 
-        severity_label = {
-            "critical": "CRÍTICO",
-            "warning": "ATENÇÃO",
-            "info": "INFO",
-        }.get(alert.severity, alert.severity.upper())
+                severity_label = {
+                    "critical": "CRÍTICO",
+                    "warning": "ATENÇÃO",
+                    "info": "INFO",
+                }.get(alert.severity, alert.severity.upper())
 
-        st.markdown(
-            f"""
-            <div class="alert-card" style="
-                background: {severity_color};
-                border-left: 4px solid {border_color};
-                border-radius: 8px;
-                padding: 12px 16px;
-                margin-bottom: 8px;
-            ">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 20px;">{alert.icon}</span>
-                    <div style="flex: 1;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <strong style="font-size: 14px; color: #F7FAFC;">
-                                {alert.name}
-                            </strong>
-                            <span style="
-                                font-size: 11px;
-                                font-weight: 600;
-                                padding: 2px 8px;
-                                border-radius: 4px;
-                                background: {border_color}22;
-                                color: {border_color};
-                            ">{severity_label}</span>
-                        </div>
-                        <div style="font-size: 12px; color: #AAB7C4; margin-top: 4px;">
-                            {alert.message}
-                        </div>
-                        <div style="font-size: 11px; color: #6B7280; margin-top: 2px;">
-                            Atual: <strong>{alert.value}{'%' if 'MoM' in alert.name or 'Margem' in alert.name or 'Frete' in alert.name or 'Desconto' in alert.name else ''}</strong>
-                            &nbsp;|&nbsp;
-                            Limite: <strong>{alert.threshold}</strong>
+                # Labels descritivos: valor atual vs limite
+                if 'Margem' in alert.name:
+                    atual_label = f"Margem atual: {alert.value:.1f}%"
+                    limite_label = f"Limite mínimo: {alert.threshold:.0f}%"
+                elif 'Frete' in alert.name:
+                    atual_label = f"Frete atual: {alert.value:.1f}%"
+                    limite_label = f"Limite máximo: {alert.threshold:.0f}%"
+                elif 'MoM' in alert.name:
+                    atual_label = f"Variação atual: {alert.value:+.1f}%"
+                    limite_label = f"Limite mínimo: {alert.threshold:+.0f}%"
+                elif 'HHI' in alert.message or 'Concentração' in alert.name:
+                    atual_label = f"HHI atual: {alert.value:.0f}"
+                    limite_label = f"Limite máximo: {alert.threshold:.0f}"
+                elif 'Desconto' in alert.name:
+                    atual_label = f"Desconto atual: {alert.value:.1f}%"
+                    limite_label = f"Limite máximo: {alert.threshold:.0f}%"
+                else:
+                    atual_label = f"Atual: {alert.value}"
+                    limite_label = f"Limite: {alert.threshold}"
+
+                st.markdown(
+                    f"""
+                    <div class="alert-card" style="
+                        background: {severity_color};
+                        border-left: 4px solid {border_color};
+                        border-radius: 8px;
+                        padding: 12px 16px;
+                        margin-bottom: 8px;
+                    ">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 20px;">{alert.icon}</span>
+                            <div style="flex: 1;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <strong style="font-size: 14px; color: #F7FAFC;">
+                                        {alert.name}
+                                    </strong>
+                                    <span style="
+                                        font-size: 11px;
+                                        font-weight: 600;
+                                        padding: 2px 8px;
+                                        border-radius: 4px;
+                                        background: {border_color}22;
+                                        color: {border_color};
+                                    ">{severity_label}</span>
+                                </div>
+                                <div style="font-size: 12px; color: #AAB7C4; margin-top: 4px;">
+                                    {alert.message}
+                                </div>
+                                <div style="font-size: 11px; color: #6B7280; margin-top: 2px;">
+                                    {atual_label} &nbsp;|&nbsp; {limite_label}
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+                    """,
+                    unsafe_allow_html=True,
+                )
 
     st.markdown("---")
