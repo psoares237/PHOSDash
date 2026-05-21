@@ -75,6 +75,6 @@ class Config:
         """Resolve todos os caminhos a partir de base_dir."""
         self.dados_oficiais = os.path.join(self.base_dir, "Dados_PHOSDash.xlsx")
         self.modelo_download = os.path.join(self.base_dir, "Modelo_dados_PHOSDash.xlsx")
-        self.logo_sidebar = os.path.join(self.base_dir, "assets", "logo_azul.png")
-        self.bg_watermark = os.path.join(self.base_dir, "assets", "bg_watermark.png")
+        self.logo_sidebar = os.path.join(self.base_dir, "assets", "logo_phos_sidebar.png")
+        self.bg_watermark = os.path.join(self.base_dir, "assets", "bg_watermark_small.jpg")
         self.assets_css = os.path.join(self.base_dir, "assets", "theme.css")

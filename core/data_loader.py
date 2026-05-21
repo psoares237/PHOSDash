@@ -15,6 +15,7 @@ import streamlit as st
 from core.config import COL_MAP
 
 
+@st.cache_data(ttl=600, show_spinner=False)
 def load_official_data(path: str) -> pd.DataFrame | None:
     """Carrega a planilha oficial Dados_PHOSDash.xlsx.
 
@@ -106,6 +107,7 @@ def standardize(df: pd.DataFrame, col_map: dict | None = None) -> pd.DataFrame:
     return df
 
 
+@st.cache_data(ttl=600, show_spinner=False)
 def generate_demo_data() -> pd.DataFrame:
     """Gera dados fictícios para demonstração quando não há dados oficiais.
 
