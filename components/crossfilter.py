@@ -74,20 +74,29 @@ def recompute_aggregations(*args, **kwargs):
 
 
 def render_filter_bar(page_key: str):
-    """Renderiza barra de filtros ativos com badges e botão limpar."""
+    """Renderiza barra de filtros ativos com badges e selectbox para remover."""
     fs = FilterState(page_key)
 
     st.markdown("---")
     if fs.has_filters:
-        # Cada filtro: badge + botão × minúsculo em linha separada
         for col_name, val in list(fs.filters.items()):
-            st.markdown(
-                f'<span class="cf-badge">🏷️ <strong>{col_name}</strong>: {val}</span>',
-                unsafe_allow_html=True,
-            )
-            if st.button("✕ remover", key=f"cf_x_{page_key}_{col_name}"):
-                fs.clear(col_name)
-                st.rerun()
+            left, right = st.columns([5, 1])
+            with left:
+                st.markdown(
+                    f'<span class="cf-badge">🏷️ <strong>{col_name}</strong>: {val}</span>',
+                    unsafe_allow_html=True,
+                )
+            with right:
+                remove_key = f"cf_rm_{page_key}_{col_name}"
+                action = st.selectbox(
+                    "Remover",
+                    options=["✓", "✕"],
+                    key=remove_key,
+                    label_visibility="collapsed",
+                )
+                if action == "✕":
+                    fs.clear(col_name)
+                    st.rerun()
 
         # Botão Limpar Todos
         if st.button("🗑️ Limpar Todos", key=f"cf_clear_{page_key}"):
@@ -132,8 +141,10 @@ def render_dimension_filters(
             if current and current in options_with_all:
                 idx = options_with_all.index(current)
 
-            # Reset counter força recriação dos widgets após clear_all
-            _reset_ver = st.session_state.get(f"cf_reset_{page_key}", 0)
+            # Reset counter: usa max do global (clear_all) e por coluna (clear)
+            _global_ver = st.session_state.get(f"cf_reset_{page_key}", 0)
+            _col_ver = st.session_state.get(f"cf_reset_{page_key}_{col_name}", 0)
+            _reset_ver = max(_global_ver, _col_ver)
             selected = st.selectbox(
                 f"🔍 {label}",
                 options=options_with_all,
