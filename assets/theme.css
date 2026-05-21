@@ -702,6 +702,13 @@ div[data-baseweb="select"] * { cursor: pointer !important; }
     margin-bottom: 0.8rem;
 }
 
+/* Labels do formulário — respiro entre texto da pergunta e campo */
+.feedback-block .stSelectbox label,
+.feedback-block .stTextInput label {
+    margin-bottom: 0.5rem;
+    display: inline-block;
+}
+
 /* Botão de envio */
 div.stButton > button[kind="primary"] {
     background: linear-gradient(135deg, #2c6b96 0%, #1a4d6e 100%) !important;
