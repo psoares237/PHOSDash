@@ -76,42 +76,26 @@ def recompute_aggregations(*args, **kwargs):
 def render_filter_bar(page_key: str):
     """Renderiza barra de filtros ativos com badges e botão limpar."""
     fs = FilterState(page_key)
-    has_filtros = fs.has_filters
-
-    # Funções de callback para limpar filtros
-    def _clear_one(col_name: str = ""):
-        fs.clear(col_name)
-
-    def _clear_all_filters():
-        fs.clear_all()
 
     st.markdown("---")
-    if has_filtros:
-        n_filtros = len(fs.filters)
-        total_cols = 2 * n_filtros + 1
-        cols = st.columns(total_cols)
-
-        for i, (col_name, val) in enumerate(fs.filters.items()):
-            with cols[2 * i]:
+    if fs.has_filters:
+        # Badges + × inline (sem colunas, para evitar bug de rerun)
+        for col_name, val in fs.filters.items():
+            c1, c2 = st.columns([20, 1])
+            with c1:
                 st.markdown(
                     f'<span class="cf-badge">🏷️ <strong>{col_name}</strong>: {val}</span>',
                     unsafe_allow_html=True,
                 )
-            with cols[2 * i + 1]:
-                st.button(
-                    "✕",
-                    key=f"cf_clear_one_{page_key}_{col_name}",
-                    help=f"Remover filtro {col_name}",
-                    on_click=_clear_one,
-                    kwargs={"col_name": col_name},
-                )
+            with c2:
+                if st.button("✕", key=f"cf_x_{page_key}_{col_name}", help=f"Remover {col_name}"):
+                    fs.clear(col_name)
+                    st.rerun()
 
-        with cols[-1]:
-            st.button(
-                "🗑️ Limpar Todos",
-                key=f"cf_clear_{page_key}",
-                on_click=_clear_all_filters,
-            )
+        # Botão Limpar Todos
+        if st.button("🗑️ Limpar Todos", key=f"cf_clear_{page_key}"):
+            fs.clear_all()
+            st.rerun()
     else:
         st.button("🗑️ Limpar Todos", key=f"cf_clear_{page_key}", disabled=True)
 
