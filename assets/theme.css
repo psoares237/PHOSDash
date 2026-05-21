@@ -270,6 +270,18 @@ section[data-testid="stSidebar"] div[data-baseweb="select"] input,
 section[data-testid="stSidebar"] div[data-baseweb="select"] span { color: #F4F6F8 !important; }
 section[data-testid="stSidebar"] div[data-baseweb="select"] svg { fill: var(--color-gold) !important; }
 
+/* Navegação — primeiro selectbox (key="nav_pagina"), estilo premium */
+section[data-testid="stSidebar"] .stSelectbox:first-of-type div[data-baseweb="select"] > div {
+    border-color: rgba(211,183,62,0.25) !important;
+    box-shadow: 0 0 14px rgba(211,183,62,0.06) !important;
+    background: linear-gradient(135deg, rgba(11,25,43,0.90), rgba(11,25,43,0.80)) !important;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+section[data-testid="stSidebar"] .stSelectbox:first-of-type div[data-baseweb="select"] > div:hover {
+    border-color: rgba(211,183,62,0.45) !important;
+    box-shadow: 0 0 18px rgba(211,183,62,0.12) !important;
+}
+
 /* Footer */
 .sidebar-footer {
     text-align: center;
