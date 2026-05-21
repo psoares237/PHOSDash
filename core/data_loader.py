@@ -170,7 +170,6 @@ def generate_demo_data() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-@st.cache_data(ttl=3600, show_spinner="Carregando dados...")
 def load_data(official_path: str) -> pd.DataFrame:
     """Carrega dados obedecendo à hierarquia: upload > oficiais > demo.
 
@@ -180,9 +179,8 @@ def load_data(official_path: str) -> pd.DataFrame:
         3. Planilha oficial Dados_PHOSDash.xlsx.
         4. Dados demo gerados deterministicamente.
 
-    O resultado é cacheado em st.session_state.df para reutilização.
-    Adicionalmente usa @st.cache_data(ttl=3600) como segunda camada
-    para evitar leitura de disco a cada troca de página.
+    O resultado é cacheado em st.session_state.df para reutilização
+    entre páginas, evitando leitura de disco a cada troca.
 
     Args:
         official_path: Caminho para a planilha oficial.

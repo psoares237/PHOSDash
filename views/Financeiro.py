@@ -213,7 +213,8 @@ def render(ctx):
                     f"r = {corr['global_r']:.2f} — {corr['insight'][:80]}...",
                     fig_corr,
                     description=(
-                        "Cada bolha representa um canal de venda. Bolhas à direita "
+                        "Cada ponto = 1 pedido. Correlação negativa sugere que "
+                        "descontos maiores reduzem a margem. Bolhas à direita "
                         "e abaixo indicam canais com alto desconto e baixa margem — "
                         "candidatos a otimização comercial."
                     ),
@@ -350,7 +351,7 @@ def render(ctx):
                         line=dict(color=CHART_COLORS[0], width=2.5),
                         marker=dict(size=8),
                         customdata=saz["MesNome"].tolist(),
-                        hovertemplate="%{x}: R$ %{y:,.2f}<extra></extra>",
+                        hovertemplate="Mês: %{x} | Receita Média: R$ %{y:,.2f}<extra></extra>",
                     )
                 )
 
@@ -479,6 +480,12 @@ def render(ctx):
         )
 
         fig_rr = clean_figure(fig_rr, height=380)
+
+        st.caption(
+            "Run Rate Projetado: média diária × dias restantes. "
+            "Run Rate Ajustado: projeção com sazonalidade "
+            "(receita dessazonalizada antes da projeção)."
+        )
 
         chart_block(
             "Run Rate: Simples vs Ajustado (Sazonal)",
