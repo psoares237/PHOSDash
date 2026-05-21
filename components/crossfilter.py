@@ -151,11 +151,13 @@ def render_dimension_filters(
             if current and current in options_with_all:
                 idx = options_with_all.index(current)
 
+            # Reset counter força recriação dos widgets após clear_all
+            _reset_ver = st.session_state.get(f"cf_reset_{page_key}", 0)
             selected = st.selectbox(
                 f"🔍 {label}",
                 options=options_with_all,
                 index=idx,
-                key=f"cf_sel_{page_key}_{col_name}",
+                key=f"cf_sel_{page_key}_{col_name}_v{_reset_ver}",
             )
 
             if selected == "Todos":

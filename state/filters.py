@@ -89,6 +89,13 @@ class FilterState:
         else:
             if self._key in st.session_state and column in st.session_state[self._key]:
                 del st.session_state[self._key][column]
+            # Remove o widget específico para forçar reset visual
+            _widget_keys_to_clear = [
+                k for k in st.session_state
+                if k.startswith(f"cf_sel_{self.page_key}_{column}")
+            ]
+            for _k in _widget_keys_to_clear:
+                del st.session_state[_k]
 
     def clear_all(self):
         """Remove todos os filtros da página."""
@@ -96,9 +103,10 @@ class FilterState:
             self._store[self._key] = {}
         else:
             st.session_state[self._key] = {}
-            # Limpa também os widgets de selectbox para evitar que o valor
-            # antigo do widget seja re-aplicado no rerun (o widget state
-            # tem prioridade sobre o parâmetro index do st.selectbox).
+            # Incrementa reset counter para forçar recriação dos widgets
+            _reset_key = f"cf_reset_{self.page_key}"
+            st.session_state[_reset_key] = st.session_state.get(_reset_key, 0) + 1
+            # Limpa widgets de selectbox
             _widget_prefix = f"cf_sel_{self.page_key}_"
             _to_delete = [k for k in st.session_state if k.startswith(_widget_prefix)]
             for _k in _to_delete:
