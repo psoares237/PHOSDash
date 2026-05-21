@@ -13,6 +13,16 @@ header[data-testid="stHeader"] {
 [data-testid="stToolbar"] {
     display: none !important;
 }
+/* Esconde elementos nativos de navegação/deploy/feedback */
+[data-testid="stSidebarNav"] {
+    display: none !important;
+}
+div[data-testid="stSidebarHeader"] {
+    display: none !important;
+}
+button[title="Feedback"], button[kind="header"] {
+    display: none !important;
+}
 
 :root {
     --color-primary: #2c6b96;
