@@ -230,11 +230,11 @@ def render(ctx):
             fig_reg = clean_figure(fig_reg, height=380)
 
             # Top região
-            top_reg = regiao.iloc[0]["Regiao"] if not regiao.empty else "—"
+            top_reg = regiao.iloc[0]["Regiao"] if not regiao.empty else "N/A"
 
             chart_block(
                 "Receita e Margem por Região",
-                f"Destaque: {top_reg} — cor indica rentabilidade.",
+                f"Destaque: {top_reg}, cor indica rentabilidade.",
                 fig_reg,
                 page_key=page_key,
                 dimension="Regiao",
@@ -290,18 +290,18 @@ def render(ctx):
 
             fig_ll = clean_figure(fig_ll, height=380)
 
-            top_canal_ll = canal_ll.iloc[0]["Canal_Venda"] if not canal_ll.empty else "—"
+            top_canal_ll = canal_ll.iloc[0]["Canal_Venda"] if not canal_ll.empty else "N/A"
             top_ll_val = canal_ll.iloc[0]["Lucro_Liquido"] if not canal_ll.empty else 0
 
             chart_block(
                 "Lucro Líquido por Canal",
-                f"Destaque: {top_canal_ll} — {fmt_currency(top_ll_val)} líquido.",
+                f"Destaque: {top_canal_ll}, {fmt_currency(top_ll_val)} líquido.",
                 fig_ll,
                 page_key=page_key,
                 dimension="Canal_Venda",
                 description=(
                     "Lucro após frete por canal. Canais com pouco lucro líquido "
-                    "apesar de alta receita têm frete ou custo elevado — candidatos "
+                    "apesar de alta receita têm frete ou custo elevado, candidatos "
                     "a renegociação logística ou revisão de preço."
                 ),
             )
@@ -353,12 +353,12 @@ def _render_leitura(ctx, receita, prev_receita, lucro, margem, canal, regiao, pa
 
     if regiao_nome:
         frases.append(
-            f"Margem de <b>{margem:.1f}%</b> ({margem_status}) — "
+            f"Margem de <b>{margem:.1f}%</b> ({margem_status}), "
             f"<b>{regiao_nome}</b> lidera com {regiao_margem:.1f}%."
         )
     else:
         frases.append(
-            f"Margem de <b>{margem:.1f}%</b> — situação {margem_status}."
+            f"Margem de <b>{margem:.1f}%</b>, situação {margem_status}."
         )
 
     # 3. Alerta contextual (receita subindo com margem baixa)
@@ -366,7 +366,7 @@ def _render_leitura(ctx, receita, prev_receita, lucro, margem, canal, regiao, pa
         var = ((receita - prev_receita) / prev_receita) * 100
         if var > 5 and margem < 30:
             frases.append(
-                "⚠️ Atenção: receita subindo com margem comprimida — "
+"⚠️ Atenção: receita subindo com margem comprimida, "
                 "investigar frete, descontos ou mix de canais."
             )
 

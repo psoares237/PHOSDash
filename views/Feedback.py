@@ -71,7 +71,7 @@ def render(cfg: Config) -> None:
     # E-mail opcional
     # ═══════════════════════════════════════════
     st.session_state.fb_email = st.text_input(
-        "📧 E-mail (opcional — para receber atualizações do PHOSDash)",
+"📧 E-mail (opcional, para receber atualizações do PHOSDash)",
         value=st.session_state.fb_email,
         key="fb_email_widget",
         placeholder="seu@email.com",

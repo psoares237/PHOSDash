@@ -29,7 +29,7 @@ def render(ctx):
     page_key = ctx.page_key
 
     # Top category info for subtitle
-    top_cat_name = cat.iloc[0]["Categoria"] if not cat.empty else "—"
+    top_cat_name = cat.iloc[0]["Categoria"] if not cat.empty else "N/A"
     top_cat_share = (
         cat.iloc[0]["Receita"] / cat["Receita"].sum() * 100
     ) if not cat.empty else 0
@@ -115,7 +115,7 @@ def render(ctx):
                 description=(
                     "Visão integrada: barras mostram receita, linha contínua o lucro "
                     "e linha tracejada a margem %. Identifique meses de alta receita "
-                    "com baixa margem — sinal de custo ou desconto excessivo."
+"com baixa margem, sinal de custo ou desconto excessivo."
                 ),
             )
 
@@ -213,7 +213,7 @@ def render(ctx):
 
             chart_block(
                 "Top 5 Vendedores",
-                "Performance por vendedor — cor indica margem.",
+"Performance por vendedor, cor indica margem.",
                 fig_vend,
                 page_key=page_key,
                 dimension="Vendedor",
@@ -284,7 +284,7 @@ def render(ctx):
 
             chart_block(
                 "Receita e Margem por Canal",
-                f"Destaque: {top_channel_name} — {top_channel_share:.1f}% da receita.",
+                f"Destaque: {top_channel_name}, {top_channel_share:.1f}% da receita.",
                 fig_canal,
                 page_key=page_key,
                 dimension="Canal_Venda",

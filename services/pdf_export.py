@@ -194,7 +194,7 @@ def _draw_chart_section(pdf: ExecutivePDF, fig: go.Figure):
 
     # Card background
     pdf.draw_rect(x - 2, y - 6, w + 4, h + 12, BG_CARD)
-    pdf.text_primary(x, y - 4, "📈 Evolução Mensal — Receita, Lucro e Margem", size=9, bold=True)
+    pdf.text_primary(x, y - 4, "📈 Evolução Mensal: Receita, Lucro e Margem", size=9, bold=True)
 
     # Salva imagem temporária
     import tempfile
