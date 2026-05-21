@@ -40,13 +40,26 @@ class ExecutivePDF(FPDF):
         self.set_auto_page_break(auto=False)
         self.add_page()
 
-        # Registra Arial como fonte Unicode (suporta caracteres especiais)
-        try:
-            self.add_font("Arial", "", r"C:\Windows\Fonts\arial.ttf", uni=True)
-            self.add_font("Arial", "B", r"C:\Windows\Fonts\arialbd.ttf", uni=True)
-            self.font_family = "Arial"
-        except Exception:
-            # Fallback: Helvetica built-in (não suporta Unicode, mas funciona)
+        # Registra fonte Unicode (suporta caracteres especiais)
+        font_registered = False
+        font_paths = [
+            # Linux: DejaVu Sans (quase sempre disponível)
+            ("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+             "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
+            # Windows: Arial
+            (r"C:\Windows\Fonts\arial.ttf",
+             r"C:\Windows\Fonts\arialbd.ttf"),
+        ]
+        for regular_path, bold_path in font_paths:
+            try:
+                self.add_font("UniFont", "", regular_path)
+                self.add_font("UniFont", "B", bold_path)
+                self.font_family = "UniFont"
+                font_registered = True
+                break
+            except Exception:
+                continue
+        if not font_registered:
             self.font_family = "Helvetica"
 
     # ── Métodos de desenho ──
