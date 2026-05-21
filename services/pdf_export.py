@@ -431,7 +431,7 @@ def generate_executive_pdf(
                 name="Margem %",
                 mode="lines",
                 line=dict(color="#8B5CF6", width=1.5, dash="dot"),
-                hovertemplate="Margem: %{y:.1f}%<extra></extra>",
+                hovertemplate="Margem: %{y:.2f}%<extra></extra>",
             ),
             secondary_y=True,
         )

@@ -85,7 +85,7 @@ def render(ctx):
                     mode="lines",
                     line=dict(color=CHART_COLORS[5], width=1.5, dash="dot"),
                     customdata=monthly["MesLabel"].tolist(),
-                    hovertemplate="Margem: %{y:.1f}%<extra></extra>",
+                    hovertemplate="Margem: %{y:.2f}%<extra></extra>",
                 ),
                 secondary_y=True,
             )
@@ -191,7 +191,7 @@ def render(ctx):
                 customdata=vend_top["Vendedor"].tolist(),
                 hovertemplate=(
                     "%{x}<br>Receita: R$ %{y:,.2f}<br>"
-                    "Margem: %{marker.color:.1f}%<extra></extra>"
+                    "Margem: %{marker.color:.2f}%<extra></extra>"
                 ),
                 marker=dict(
                     line=dict(width=0),
@@ -261,7 +261,7 @@ def render(ctx):
                     textposition="top center",
                     textfont=dict(size=11, color="#F7FAFC"),
                     customdata=canal["Canal_Venda"].tolist(),
-                    hovertemplate="%{x}: Margem %{y:.1f}%<extra></extra>",
+                    hovertemplate="%{x}: Margem %{y:.2f}%<extra></extra>",
                 ),
                 secondary_y=True,
             )

@@ -93,7 +93,7 @@ def render(ctx):
                         marker_color=mom_colors,
                         marker_line_width=0,
                         customdata=mom_data["MesLabel"].tolist(),
-                        hovertemplate="%{x}: %{y:+.1f}%<extra></extra>",
+                        hovertemplate="%{x}: %{y:+.2f}%<extra></extra>",
                     )
                 )
                 fig_var.add_hline(
@@ -141,7 +141,7 @@ def render(ctx):
                         marker_color=yoy_colors,
                         marker_line_width=0,
                         customdata=yoy_data["MesLabel"].tolist(),
-                        hovertemplate="%{x}: %{y:+.1f}%<extra></extra>",
+                        hovertemplate="%{x}: %{y:+.2f}%<extra></extra>",
                     )
                 )
                 fig_var.add_hline(
@@ -201,7 +201,7 @@ def render(ctx):
                 customdata=regiao["Regiao"].tolist(),
                 hovertemplate=(
                     "%{x}<br>Receita: R$ %{y:,.2f}<br>"
-                    "Margem: %{marker.color:.1f}%<extra></extra>"
+                    "Margem: %{marker.color:.2f}%<extra></extra>"
                 ),
                 marker=dict(
                     line=dict(width=0),
@@ -261,7 +261,7 @@ def render(ctx):
                 customdata=canal_ll["Canal_Venda"].tolist(),
                 hovertemplate=(
                     "%{x}<br>Lucro Líquido: R$ %{y:,.2f}<br>"
-                    "Margem: %{marker.color:.1f}%<extra></extra>"
+                    "Margem: %{marker.color:.2f}%<extra></extra>"
                 ),
                 marker=dict(
                     line=dict(width=0),

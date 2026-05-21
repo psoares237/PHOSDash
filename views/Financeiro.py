@@ -107,7 +107,7 @@ def render(ctx):
                 texttemplate="%{text:.1f}%",
                 textposition="outside",
                 customdata=mc_agg.head(8)["Categoria"].tolist(),
-                hovertemplate="%{x}: %{y:.1f}% de margem<br>Receita: R$ %{customdata[0]}<extra></extra>",
+                hovertemplate="%{x}: %{y:.2f}% de margem<br>Receita: R$ %{customdata[0]}<extra></extra>",
             )
 
             fig_mc.update_layout(
@@ -194,8 +194,8 @@ def render(ctx):
                     textposition="top center",
                     marker=dict(opacity=0.75, line=dict(width=1, color="#2c3e50")),
                     hovertemplate=(
-                        "Desconto Médio: %{x:.1f}%<br>"
-                        "Margem: %{y:.1f}%<br>"
+                        "Desconto Médio: %{x:.2f}%<br>"
+                        "Margem: %{y:.2f}%<br>"
                         "Receita: R$ %{marker.size:,.2f}<extra></extra>"
                     ),
                 )
@@ -240,7 +240,7 @@ def render(ctx):
                     texttemplate="%{text:.1f}%",
                     textposition="outside",
                     customdata=canal_agg.head(8)["Canal_Venda"].tolist(),
-                    hovertemplate="%{x}: %{y:.1f}% da receita em frete<extra></extra>",
+                    hovertemplate="%{x}: %{y:.2f}% da receita em frete<extra></extra>",
                 )
 
                 fig_frete.update_layout(
@@ -531,7 +531,7 @@ def render(ctx):
                     customdata=pareto_df["Pct_Receita"],
                     hovertemplate=(
                         "%{x}: R$ %{y:,.2f}<br>"
-                        "%{customdata:.1f}% da receita<extra></extra>"
+                        "%{customdata:.2f}% da receita<extra></extra>"
                     ),
                 )
             )
@@ -546,7 +546,7 @@ def render(ctx):
                     line=dict(color=CHART_COLORS[6], width=2.2),
                     marker=dict(size=5, color=CHART_COLORS[6]),
                     yaxis="y2",
-                    hovertemplate="%{x}: %{y:.1f}% acumulado<extra></extra>",
+                    hovertemplate="%{x}: %{y:.2f}% acumulado<extra></extra>",
                 )
             )
 
