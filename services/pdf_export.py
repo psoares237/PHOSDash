@@ -470,4 +470,4 @@ def generate_executive_pdf(
     # ── Rodapé ──
     _draw_footer(pdf)
 
-    return pdf.output()
+    return bytes(pdf.output())
