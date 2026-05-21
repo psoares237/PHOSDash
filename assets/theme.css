@@ -24,6 +24,13 @@ button[title="Feedback"], button[kind="header"] {
     display: none !important;
 }
 
+/* Remove diálogos nativos do Streamlit que podem ficar sobrepostos ao app */
+.stDialog,
+div[data-testid="stDialog"] {
+    display: none !important;
+    pointer-events: none !important;
+}
+
 :root {
     --color-primary: #2c6b96;
     --color-gold: #d3b73e;
@@ -644,6 +651,27 @@ div[data-baseweb="select"] * { cursor: pointer !important; }
     color: #fff;
 }
 
+.sidebar-feedback-link {
+    display: block;
+    width: 100%;
+    padding: 10px 12px;
+    background: linear-gradient(135deg, rgba(44,107,150,0.34), rgba(26,82,118,0.28));
+    color: var(--text-primary) !important;
+    border: 1px solid rgba(211,183,62,0.26);
+    border-radius: 8px;
+    text-align: center;
+    text-decoration: none !important;
+    font-size: 0.86rem;
+    font-weight: 650;
+    box-shadow: 0 2px 10px rgba(44,107,150,0.12);
+}
+
+.sidebar-feedback-link:hover {
+    border-color: var(--color-gold);
+    background: linear-gradient(135deg, rgba(58,139,192,0.42), rgba(44,107,150,0.35));
+    color: #fff !important;
+}
+
 /* ═══════════════════════════════════════════
    PESQUISA DE FEEDBACK
    ═══════════════════════════════════════════ */
@@ -703,10 +731,9 @@ div[data-baseweb="select"] * { cursor: pointer !important; }
 }
 
 /* Labels do formulário — respiro entre texto da pergunta e campo */
-.feedback-block .stSelectbox label,
-.feedback-block .stTextInput label {
-    margin-bottom: 0.5rem;
-    display: inline-block;
+.feedback-block .stSelectbox p,
+.feedback-block .stTextInput p {
+    margin-bottom: 0.55rem !important;
 }
 
 /* Botão de envio */

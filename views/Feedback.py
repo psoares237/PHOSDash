@@ -6,6 +6,7 @@ Respostas salvas em /opt/PHOSDash/data/feedback.csv (append).
 
 import csv
 import os
+import shutil
 from datetime import datetime, timezone
 
 import streamlit as st
@@ -14,6 +15,21 @@ from core.config import Config
 
 # ── Constantes ──
 FEEDBACK_CSV = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "feedback.csv")
+FEEDBACK_FIELDS = [
+    "timestamp", "email",
+    "q1_experiencia_geral",
+    "q2_visual_profissionalismo", "q2_outro",
+    "q3_navegacao_intuitiva", "q3_outro",
+    "q4_indicadores_faceis", "q4_outro",
+    "q5_graficos_interpretacao", "q5_outro",
+    "q6_tela_mais_util", "q6_outro",
+    "q7_usaria_empresa_real", "q7_outro",
+    "q8_area_mais_valor", "q8_outro",
+    "q9_ajuda_tomada_decisao", "q9_outro",
+    "q10_sentiu_falta", "q10_outro",
+    "q11_melhoria_maior_impacto", "q11_outro",
+    "q12_opiniao_sugestao",
+]
 
 # ── Opções por pergunta ──
 OPCOES_Q1 = ["", "Excelente", "Boa", "Regular", "Ruim", "Péssima"]
@@ -37,25 +53,25 @@ def _salvar_resposta(dados: dict) -> None:
     """Salva uma linha no CSV de feedback (append). Cria arquivo + header se necessário."""
     os.makedirs(os.path.dirname(FEEDBACK_CSV), exist_ok=True)
     existe = os.path.isfile(FEEDBACK_CSV)
+    mode = "a"
 
-    fieldnames = [
-        "timestamp", "email",
-        "q1_experiencia_geral",
-        "q2_visual_profissionalismo", "q2_outro",
-        "q3_navegacao_intuitiva", "q3_outro",
-        "q4_indicadores_faceis", "q4_outro",
-        "q5_graficos_interpretacao", "q5_outro",
-        "q6_tela_mais_util", "q6_outro",
-        "q7_usaria_empresa_real", "q7_outro",
-        "q8_area_mais_valor", "q8_outro",
-        "q9_ajuda_tomada_decisao", "q9_outro",
-        "q10_sentiu_falta", "q10_outro",
-        "q11_melhoria_maior_impacto", "q11_outro",
-        "q12_opiniao_sugestao",
-    ]
+    if existe:
+        with open(FEEDBACK_CSV, newline="", encoding="utf-8") as f:
+            header = next(csv.reader(f), [])
+        if header != FEEDBACK_FIELDS:
+            backup_path = f"{FEEDBACK_CSV}.bak"
+            if not os.path.exists(backup_path):
+                shutil.copy2(FEEDBACK_CSV, backup_path)
+            existe = False
+            mode = "w"
 
-    with open(FEEDBACK_CSV, "a", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames, quoting=csv.QUOTE_ALL)
+    with open(FEEDBACK_CSV, mode, newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(
+            f,
+            fieldnames=FEEDBACK_FIELDS,
+            quoting=csv.QUOTE_ALL,
+            extrasaction="ignore",
+        )
         if not existe:
             writer.writeheader()
         writer.writerow(dados)
@@ -110,6 +126,10 @@ def render(cfg: Config) -> None:
     """, unsafe_allow_html=True)
 
     st.markdown('<div class="feedback-divider"></div>', unsafe_allow_html=True)
+
+    if st.session_state.pop("fb_submitted", False):
+        st.success("Feedback registrado com sucesso. Obrigado por contribuir com a evolução do PHOSDash.")
+        st.balloons()
 
     # ── Inicializa session state ──
     if "fb_email" not in st.session_state:
@@ -294,16 +314,8 @@ def render(cfg: Config) -> None:
 
             _salvar_resposta(dados)
 
-            # Mensagem de agradecimento elaborada
-            st.markdown("""
-            <div style="text-align:center; padding:20px;">
-                <h3>✅ Feedback registrado!</h3>
-                <p>Obrigado por contribuir com a evolução do PHOSDash. Sua opinião faz diferença.</p>
-            </div>
-            """, unsafe_allow_html=True)
-            st.balloons()
-
             # Limpa o formulário
+            st.session_state.fb_submitted = True
             st.session_state.fb_email = ""
             for i in range(1, 13):
                 st.session_state[f"fb_q{i}"] = ""

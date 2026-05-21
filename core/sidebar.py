@@ -215,6 +215,14 @@ def render_sidebar(config: Config) -> dict[str, Any]:
 
     st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
 
+    # ── Feedback ──
+    st.markdown(
+        '<a href="?page=feedback" target="_self" class="sidebar-feedback-link">📋 Dar Feedback</a>',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
+
     # ── Rodapé ──
     _render_footer()
 
