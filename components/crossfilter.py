@@ -78,10 +78,16 @@ def render_filter_bar(page_key: str):
     fs = FilterState(page_key)
     has_filtros = fs.has_filters
 
+    # Funções de callback para limpar filtros
+    def _clear_one(col_name: str = ""):
+        fs.clear(col_name)
+
+    def _clear_all_filters():
+        fs.clear_all()
+
     st.markdown("---")
     if has_filtros:
         n_filtros = len(fs.filters)
-        # 2 cols per filter (badge + x button) + 1 for "Limpar Todos"
         total_cols = 2 * n_filtros + 1
         cols = st.columns(total_cols)
 
@@ -92,14 +98,20 @@ def render_filter_bar(page_key: str):
                     unsafe_allow_html=True,
                 )
             with cols[2 * i + 1]:
-                if st.button("✕", key=f"cf_clear_one_{page_key}_{col_name}", help=f"Remover filtro {col_name}"):
-                    fs.clear(col_name)
-                    st.rerun()
+                st.button(
+                    "✕",
+                    key=f"cf_clear_one_{page_key}_{col_name}",
+                    help=f"Remover filtro {col_name}",
+                    on_click=_clear_one,
+                    kwargs={"col_name": col_name},
+                )
 
         with cols[-1]:
-            if st.button("🗑️ Limpar Todos", key=f"cf_clear_{page_key}"):
-                fs.clear_all()
-                st.rerun()
+            st.button(
+                "🗑️ Limpar Todos",
+                key=f"cf_clear_{page_key}",
+                on_click=_clear_all_filters,
+            )
     else:
         st.button("🗑️ Limpar Todos", key=f"cf_clear_{page_key}", disabled=True)
 
