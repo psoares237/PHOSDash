@@ -96,6 +96,13 @@ class FilterState:
             self._store[self._key] = {}
         else:
             st.session_state[self._key] = {}
+            # Limpa também os widgets de selectbox para evitar que o valor
+            # antigo do widget seja re-aplicado no rerun (o widget state
+            # tem prioridade sobre o parâmetro index do st.selectbox).
+            _widget_prefix = f"cf_sel_{self.page_key}_"
+            _to_delete = [k for k in st.session_state if k.startswith(_widget_prefix)]
+            for _k in _to_delete:
+                del st.session_state[_k]
 
     # ── Filtragem ──
 
