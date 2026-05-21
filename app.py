@@ -114,3 +114,14 @@ if page_key == "overview":
 
 view_mod = __import__(f"views.{view_name}", fromlist=["render"])
 view_mod.render(ctx)
+
+# ── PDF Export ──
+from services.pdf_export import generate_executive_pdf
+
+pdf_bytes = generate_executive_pdf(ctx, CFG.logo_sidebar, opcao_ano)
+st.download_button(
+    label='📄 Exportar PDF',
+    data=pdf_bytes,
+    file_name='PHOSDash_Relatorio.pdf',
+    mime='application/pdf',
+)

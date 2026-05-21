@@ -1,8 +1,8 @@
 """Página: Visão Estratégica (Receita e Crescimento).
 
 Análise focada em tendências, crescimento e rentabilidade comparada:
-1. Evolução (receita + acumulado + margem)
-2. MoM com coloração positiva/negativa
+1. Leitura Executiva com narrativa contextual (crescimento, margem, alertas)
+2. MoM / YoY unificado com toggle (coloração positiva/negativa)
 3. Região com receita e margem
 4. Lucro Líquido por Canal
 
@@ -12,6 +12,7 @@ Todos os visuais respondem ao cross-filtering via page_key.
 import streamlit as st
 import plotly.express as px
 import plotly.graph_objects as go
+import pandas as pd
 
 from components.ui import render_kpis, chart_block
 from components.charts import clean_figure, CHART_COLORS
@@ -63,105 +64,29 @@ def render(ctx):
     st.markdown("<div style='height: 24px'></div>", unsafe_allow_html=True)
 
     # ═══════════════════════════════════════
-    # LINHA 1 — Evolução + MoM (2 colunas)
+    # MoM / YoY — Variação (Toggle Unificado)
     # ═══════════════════════════════════════
 
-    col1, col2 = st.columns(2)
+    view_mode = st.radio(
+        "Variação",
+        ["MoM", "YoY"],
+        horizontal=True,
+        key=f"var_toggle_{page_key}",
+    )
 
-    with col1:
-        if monthly is not None and not monthly.empty:
-            fig_monthly = go.Figure()
+    if monthly is not None and not monthly.empty:
 
-            # Barras: Receita mensal
-            fig_monthly.add_trace(
-                go.Bar(
-                    x=monthly["MesLabel"],
-                    y=monthly["Receita"],
-                    name="Receita Mensal",
-                    marker_color=CHART_COLORS[0],
-                    marker_line_width=0,
-                    customdata=monthly["MesLabel"].tolist(),
-                    hovertemplate="Receita: R$ %{y:,.2f}<extra></extra>",
-                )
-            )
-
-            # Linha: Acumulado
-            fig_monthly.add_trace(
-                go.Scatter(
-                    x=monthly["MesLabel"],
-                    y=monthly["Acumulado_Receita"],
-                    name="Acumulado",
-                    mode="lines+markers",
-                    line=dict(color=CHART_COLORS[1], width=2.5),
-                    marker=dict(size=5),
-                    yaxis="y2",
-                    customdata=monthly["MesLabel"].tolist(),
-                    hovertemplate="Acumulado: R$ %{y:,.2f}<extra></extra>",
-                )
-            )
-
-            # Linha tracejada: Margem %
-            fig_monthly.add_trace(
-                go.Scatter(
-                    x=monthly["MesLabel"],
-                    y=monthly["Margem"],
-                    name="Margem %",
-                    mode="lines",
-                    line=dict(color=CHART_COLORS[5], width=1.5, dash="dot"),
-                    yaxis="y2",
-                    customdata=monthly["MesLabel"].tolist(),
-                    hovertemplate="Margem: %{y:.1f}%<extra></extra>",
-                )
-            )
-
-            fig_monthly.update_layout(
-                barmode="group",
-                showlegend=True,
-                yaxis=dict(title="Receita Mensal"),
-                yaxis2=dict(
-                    title="Acumulado / Margem",
-                    overlaying="y",
-                    side="right",
-                    gridcolor="rgba(255,255,255,0.04)",
-                ),
-                xaxis_title="",
-                legend=dict(
-                    orientation="h",
-                    yanchor="bottom", y=1.02,
-                    xanchor="right", x=1,
-                    font=dict(size=11, color="#AAB7C4"),
-                ),
-            )
-
-            fig_monthly = clean_figure(fig_monthly, height=380)
-
-            chart_block(
-                "Evolução da Receita",
-                "Receita mensal, acumulado e margem.",
-                fig_monthly,
-                page_key=page_key,
-                dimension="MesLabel",
-                description=(
-                    "Visão completa da trajetória: receita (barras), acumulado no ano "
-                    "(linha contínua) e margem (tracejada). Alerta: margem caindo com "
-                    "receita subindo indica desconto ou custo subindo."
-                ),
-            )
-
-    with col2:
-        if monthly is not None and not monthly.empty and "MoM_Receita" in monthly.columns:
+        if view_mode == "MoM" and "MoM_Receita" in monthly.columns:
             mom_data = monthly.dropna(subset=["MoM_Receita"]).copy()
 
             if not mom_data.empty:
-                # Cores por valor positivo/negativo
                 mom_colors = [
                     CHART_COLORS[2] if v >= 0 else CHART_COLORS[6]
                     for v in mom_data["MoM_Receita"]
                 ]
 
-                fig_mom = go.Figure()
-
-                fig_mom.add_trace(
+                fig_var = go.Figure()
+                fig_var.add_trace(
                     go.Bar(
                         x=mom_data["MesLabel"],
                         y=mom_data["MoM_Receita"],
@@ -171,30 +96,25 @@ def render(ctx):
                         hovertemplate="%{x}: %{y:+.1f}%<extra></extra>",
                     )
                 )
-
-                # Linha de referência zero
-                fig_mom.add_hline(
+                fig_var.add_hline(
                     y=0, line_dash="solid", line_color="rgba(255,255,255,0.15)",
                     line_width=1,
                 )
-
-                fig_mom.update_layout(
+                fig_var.update_layout(
                     showlegend=False,
                     xaxis_title="",
                     yaxis_title="Variação MoM (%)",
                 )
+                fig_var = clean_figure(fig_var, height=380)
 
-                fig_mom = clean_figure(fig_mom, height=380)
-
-                # Estatísticas
-                avg_mom = mom_data["MoM_Receita"].mean()
-                pos_months = (mom_data["MoM_Receita"] > 0).sum()
-                total_months = len(mom_data)
+                avg_var = mom_data["MoM_Receita"].mean()
+                pos_var = (mom_data["MoM_Receita"] > 0).sum()
+                total_var = len(mom_data)
 
                 chart_block(
                     "Variação Mês a Mês (MoM)",
-                    f"Média: {avg_mom:+.1f}% | {pos_months}/{total_months} meses positivos",
-                    fig_mom,
+                    f"Média: {avg_var:+.1f}% | {pos_var}/{total_var} meses positivos",
+                    fig_var,
                     page_key=page_key,
                     dimension="MesLabel",
                     description=(
@@ -204,61 +124,55 @@ def render(ctx):
                     ),
                 )
 
-    # ═══════════════════════════════════════
-    # YoY — Variação Year-over-Year
-    # ═══════════════════════════════════════
+        elif view_mode == "YoY" and "Receita_YoY_Pct" in monthly.columns:
+            yoy_data = monthly.dropna(subset=["Receita_YoY_Pct"]).copy()
 
-    if monthly is not None and not monthly.empty and "Receita_YoY_Pct" in monthly.columns:
-        yoy_data = monthly.dropna(subset=["Receita_YoY_Pct"]).copy()
+            if not yoy_data.empty:
+                yoy_colors = [
+                    CHART_COLORS[2] if v >= 0 else CHART_COLORS[6]
+                    for v in yoy_data["Receita_YoY_Pct"]
+                ]
 
-        if not yoy_data.empty:
-            yoy_colors = [
-                CHART_COLORS[2] if v >= 0 else CHART_COLORS[6]
-                for v in yoy_data["Receita_YoY_Pct"]
-            ]
-
-            fig_yoy = go.Figure()
-
-            fig_yoy.add_trace(
-                go.Bar(
-                    x=yoy_data["MesLabel"],
-                    y=yoy_data["Receita_YoY_Pct"],
-                    marker_color=yoy_colors,
-                    marker_line_width=0,
-                    customdata=yoy_data["MesLabel"].tolist(),
-                    hovertemplate="%{x}: %{y:+.1f}%<extra></extra>",
+                fig_var = go.Figure()
+                fig_var.add_trace(
+                    go.Bar(
+                        x=yoy_data["MesLabel"],
+                        y=yoy_data["Receita_YoY_Pct"],
+                        marker_color=yoy_colors,
+                        marker_line_width=0,
+                        customdata=yoy_data["MesLabel"].tolist(),
+                        hovertemplate="%{x}: %{y:+.1f}%<extra></extra>",
+                    )
                 )
-            )
+                fig_var.add_hline(
+                    y=0, line_dash="solid", line_color="rgba(255,255,255,0.15)",
+                    line_width=1,
+                )
+                fig_var.update_layout(
+                    showlegend=False,
+                    xaxis_title="",
+                    yaxis_title="Variação YoY (%)",
+                )
+                fig_var = clean_figure(fig_var, height=380)
 
-            fig_yoy.add_hline(
-                y=0, line_dash="solid", line_color="rgba(255,255,255,0.15)",
-                line_width=1,
-            )
+                avg_var = yoy_data["Receita_YoY_Pct"].mean()
+                pos_var = (yoy_data["Receita_YoY_Pct"] > 0).sum()
+                total_var = len(yoy_data)
 
-            fig_yoy.update_layout(
-                showlegend=False,
-                xaxis_title="",
-                yaxis_title="Variação YoY (%)",
-            )
+                chart_block(
+                    "Variação Ano a Ano (YoY)",
+                    f"Média: {avg_var:+.1f}% | {pos_var}/{total_var} meses positivos",
+                    fig_var,
+                    page_key=page_key,
+                    dimension="MesLabel",
+                    description=(
+                        "Comparação com o mesmo mês do ano anterior. "
+                        "Barras verdes = crescimento YoY, vermelhas = retração. "
+                        "Identifique tendências de longo prazo e sazonalidade."
+                    ),
+                )
 
-            fig_yoy = clean_figure(fig_yoy, height=380)
-
-            avg_yoy = yoy_data["Receita_YoY_Pct"].mean()
-            pos_yoy = (yoy_data["Receita_YoY_Pct"] > 0).sum()
-            total_yoy = len(yoy_data)
-
-            chart_block(
-                "Variação Ano a Ano (YoY)",
-                f"Média: {avg_yoy:+.1f}% | {pos_yoy}/{total_yoy} meses positivos",
-                fig_yoy,
-                page_key=page_key,
-                dimension="MesLabel",
-                description=(
-                    "Comparação com o mesmo mês do ano anterior. "
-                    "Barras verdes = crescimento YoY, vermelhas = retração. "
-                    "Identifique tendências de longo prazo e sazonalidade."
-                ),
-            )
+    st.markdown("<div style='height: 24px'></div>", unsafe_allow_html=True)
 
     # ═══════════════════════════════════════
     # LINHA 2 — Região + Lucro Líquido por Canal (2 colunas)
@@ -385,78 +299,80 @@ def render(ctx):
 
 
 def _render_leitura(ctx, receita, prev_receita, lucro, margem, canal, regiao, page_key):
-    """Renderiza leitura executiva aprimorada da página Estratégica."""
+    """Renderiza leitura executiva em formato narrativo (2-3 frases)."""
 
     fs = FilterState(page_key)
 
-    # Crescimento
-    crescimento_dot = "info"
-    crescimento_label = "Sem base comparável"
-    if prev_receita > 0:
-        var = pct_change(receita, prev_receita)
-        if var is not None:
-            if var >= 10:
-                crescimento_dot = "good"
-            elif var >= 0:
-                crescimento_dot = "info"
-            elif var >= -10:
-                crescimento_dot = "warn"
-            else:
-                crescimento_dot = "bad"
-            crescimento_label = f"Receita {var:+.1f}% vs. anterior"
+    # ── Constrói frases narrativas ──
+    frases = []
 
-    # Margem status
-    margem_dot = "good" if margem >= 35 else "warn" if margem >= 25 else "bad"
-    margem_label = f"Margem {margem:.1f}%"
+    # 1. Crescimento da receita e canal mais lucrativo
+    if prev_receita and prev_receita > 0:
+        var = ((receita - prev_receita) / prev_receita) * 100
+        direcao = "cresceu" if var >= 0 else "recuou"
 
-    # Canal mais lucrativo
-    canal_msg = "—"
-    if canal is not None and not canal.empty:
-        top_canal = canal.sort_values("Lucro_Liquido", ascending=False).iloc[0]
-        canal_msg = (
-            f"{top_canal['Canal_Venda']} — "
-            f"{fmt_currency(top_canal['Lucro_Liquido'])} líquido"
-        )
+        canal_nome = ""
+        if canal is not None and not canal.empty:
+            top_canal = canal.sort_values("Lucro_Liquido", ascending=False).iloc[0]
+            canal_nome = top_canal["Canal_Venda"]
 
-    # Região com maior margem
-    regiao_msg = "—"
+        if canal_nome:
+            frases.append(
+                f"Receita {direcao} <b>{var:+.1f}%</b> vs. período anterior, "
+                f"puxada pelo canal <b>{canal_nome}</b>."
+            )
+        else:
+            frases.append(
+                f"Receita {direcao} <b>{var:+.1f}%</b> vs. período anterior."
+            )
+    else:
+        frases.append("Receita sem base comparável no período.")
+
+    # 2. Margem e região de destaque
+    regiao_nome = ""
+    regiao_margem = 0
     if regiao is not None and not regiao.empty:
-        top_margem_reg = regiao.sort_values("Margem", ascending=False).iloc[0]
-        regiao_msg = (
-            f"{top_margem_reg['Regiao']} — "
-            f"margem {top_margem_reg['Margem']:.1f}%"
+        top_reg = regiao.sort_values("Margem", ascending=False).iloc[0]
+        regiao_nome = top_reg["Regiao"]
+        regiao_margem = top_reg["Margem"]
+
+    margem_status = (
+        "saudável" if margem >= 35
+        else "sob pressão" if margem >= 25
+        else "crítica"
+    )
+
+    if regiao_nome:
+        frases.append(
+            f"Margem de <b>{margem:.1f}%</b> ({margem_status}) — "
+            f"<b>{regiao_nome}</b> lidera com {regiao_margem:.1f}%."
+        )
+    else:
+        frases.append(
+            f"Margem de <b>{margem:.1f}%</b> — situação {margem_status}."
         )
 
+    # 3. Alerta contextual (receita subindo com margem baixa)
+    if prev_receita and prev_receita > 0:
+        var = ((receita - prev_receita) / prev_receita) * 100
+        if var > 5 and margem < 30:
+            frases.append(
+                "⚠️ Atenção: receita subindo com margem comprimida — "
+                "investigar frete, descontos ou mix de canais."
+            )
+
+    # ── Renderiza HTML ──
     html = '<div class="exec-card">'
 
     html += '<div class="exec-header">'
     html += '<span class="exec-header-icon">📋</span>'
     html += '<span class="exec-header-title">Leitura Executiva</span>'
-    html += '<span class="exec-header-badge">Crescimento</span>'
+    html += '<span class="exec-header-badge">Narrativa</span>'
     html += '</div>'
 
-    html += '<div class="exec-metric">'
-    html += f'<span class="exec-dot {crescimento_dot}"></span>'
-    html += f'<span class="exec-metric-label">Crescimento vs. anterior</span>'
-    html += f'<span class="exec-metric-value">{crescimento_label}</span>'
-    html += '</div>'
-
-    html += '<div class="exec-metric">'
-    html += f'<span class="exec-dot {margem_dot}"></span>'
-    html += f'<span class="exec-metric-label">Rentabilidade</span>'
-    html += f'<span class="exec-metric-value">{margem_label}</span>'
-    html += '</div>'
-
-    html += '<div class="exec-metric">'
-    html += '<span class="exec-dot info"></span>'
-    html += '<span class="exec-metric-label">Canal mais lucrativo</span>'
-    html += f'<span class="exec-metric-value">{canal_msg}</span>'
-    html += '</div>'
-
-    html += '<div class="exec-metric">'
-    html += '<span class="exec-dot info"></span>'
-    html += '<span class="exec-metric-label">Região de maior margem</span>'
-    html += f'<span class="exec-metric-value">{regiao_msg}</span>'
+    html += '<div class="exec-narrative">'
+    for frase in frases:
+        html += f"<p>{frase}</p>"
     html += '</div>'
 
     if fs.has_filters:

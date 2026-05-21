@@ -84,7 +84,6 @@ class AlertEngine:
         return a / b if b else 0.0
 
     @staticmethod
-    @st.cache_data(ttl=300, show_spinner=False)
     def _compute_hhi_for_dimension(df: pd.DataFrame, column: str) -> float:
         """Calcula HHI para uma dimensão, com cache Streamlit."""
         from services.kpi_service import hhi_index
