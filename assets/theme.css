@@ -316,7 +316,27 @@ section[data-testid="stSidebar"] .stSelectbox:first-of-type div[data-baseweb="se
 }
 .sidebar-footer-logo { font-size: 0.78rem; font-weight: 700; color: var(--color-gold); letter-spacing: 0.03em; }
 .sidebar-footer-slogan { font-size: 0.6rem; color: #5A6F86; letter-spacing: 0.04em; text-transform: uppercase; margin-top: 0.15rem; }
-.sidebar-footer-version { font-size: 0.56rem; color: #3D4F63; margin-top: 0.3rem; }
+.sidebar-footer-contact-title {
+    margin-top: 0.85rem;
+    font-size: 0.66rem;
+    font-weight: 800;
+    color: #C8D3E0;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+.sidebar-footer-contact {
+    display: block;
+    margin-top: 0.35rem;
+    color: #8FBCDB !important;
+    font-size: 0.64rem;
+    line-height: 1.35;
+    text-decoration: none !important;
+    overflow-wrap: anywhere;
+}
+.sidebar-footer-contact:hover {
+    color: var(--color-gold) !important;
+}
+.sidebar-footer-version { font-size: 0.56rem; color: #3D4F63; margin-top: 0.7rem; }
 
 /* ═══════════════════════════════════════════
    LEITURA EXECUTIVA — Card premium full-width
@@ -701,6 +721,33 @@ div[data-baseweb="select"] * { cursor: pointer !important; }
     height: 1px;
     background: rgba(211,183,62,0.15);
     margin: 1.2rem 0 1.5rem;
+}
+
+.feedback-back-wrap {
+    display: flex;
+    justify-content: center;
+    margin: 1rem 0 0.4rem;
+}
+
+.feedback-back-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    padding: 0 18px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(44,107,150,0.34), rgba(26,82,118,0.28));
+    color: var(--text-primary) !important;
+    border: 1px solid rgba(211,183,62,0.28);
+    font-size: 0.86rem;
+    font-weight: 650;
+    text-decoration: none !important;
+}
+
+.feedback-back-btn:hover {
+    border-color: var(--color-gold);
+    background: linear-gradient(135deg, rgba(58,139,192,0.42), rgba(44,107,150,0.35));
+    color: #fff !important;
 }
 
 .feedback-block {

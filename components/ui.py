@@ -164,7 +164,7 @@ def chart_block(
     if use_click:
         result = st.plotly_chart(
             fig,
-            use_container_width=True,
+            width="stretch",
             config=config,
             key=f"cf_{page_key}_{chart_key}",
             on_select="rerun",
@@ -178,7 +178,7 @@ def chart_block(
     else:
         st.plotly_chart(
             fig,
-            use_container_width=True,
+            width="stretch",
             config=config,
             key=chart_key,
         )

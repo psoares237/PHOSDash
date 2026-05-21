@@ -92,6 +92,9 @@ def _render_footer() -> None:
         """<div class="sidebar-footer">
 <div class="sidebar-footer-logo">PHOSFit Brasil</div>
 <div class="sidebar-footer-slogan">Inteligência que gera resultado</div>
+<div class="sidebar-footer-contact-title">Fale comigo</div>
+<a class="sidebar-footer-contact" href="https://www.linkedin.com/in/pedrosoaresfinops/" target="_blank">LinkedIn</a>
+<a class="sidebar-footer-contact" href="mailto:pedro.soares@phosconsultoria.com.br">pedro.soares@phosconsultoria.com.br</a>
 <div class="sidebar-footer-version">v2.0 • 2026</div>
 </div>""",
         unsafe_allow_html=True,
@@ -133,19 +136,6 @@ def render_sidebar(config: Config) -> dict[str, Any]:
         nav_labels,
         label_visibility="collapsed",
         key="nav_pagina",
-    )
-
-    # Links para abrir em nova aba
-    page_links = {
-        "📊 Visão Operacional": "?page=overview",
-        "🎯 Visão Estratégica": "?page=estrategica",
-        "💰 Visão Financeira": "?page=financeira",
-    }
-    st.markdown(
-        f"""<div style="margin-top:6px;font-size:0.65rem;color:#5A6F86;text-align:center;">
-        🔗 <a href="{page_links[pagina]}" target="_blank" style="color:#7B8FA8;text-decoration:none;">
-        Abrir em nova aba</a></div>""",
-        unsafe_allow_html=True,
     )
 
     st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)

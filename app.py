@@ -159,10 +159,33 @@ view_mod.render(ctx)
 # ── PDF Export ──
 from services.pdf_export import generate_executive_pdf
 
-pdf_bytes = generate_executive_pdf(ctx, CFG.logo_sidebar, opcao_ano)
-st.download_button(
-    label='📄 Exportar PDF',
-    data=pdf_bytes,
-    file_name='PHOSDash_Relatorio.pdf',
-    mime='application/pdf',
+pdf_cache_key = (
+    page_key,
+    str(opcao_ano),
+    len(ctx.current_df),
+    float(ctx.current_total.get("receita", 0) or 0),
+    float(ctx.current_total.get("lucro", 0) or 0),
+    int(ctx.current_total.get("pedidos", 0) or 0),
 )
+
+if st.session_state.get("pdf_cache_key") != pdf_cache_key:
+    st.session_state.pop("pdf_bytes", None)
+    st.session_state.pdf_cache_key = pdf_cache_key
+
+if st.button("📄 Preparar PDF", width="stretch", key="prepare_pdf_btn"):
+    with st.spinner("Gerando relatório PDF..."):
+        st.session_state.pdf_bytes = generate_executive_pdf(
+            ctx,
+            CFG.logo_sidebar,
+            opcao_ano,
+        )
+
+if st.session_state.get("pdf_bytes"):
+    st.download_button(
+        label="Baixar PDF",
+        data=st.session_state.pdf_bytes,
+        file_name="PHOSDash_Relatorio.pdf",
+        mime="application/pdf",
+        width="stretch",
+        key="download_pdf_btn",
+    )

@@ -202,6 +202,12 @@ def render(cfg: Config) -> None:
                 st.info(google_sync_message)
             else:
                 st.warning(google_sync_message)
+        st.markdown(
+            '<div class="feedback-back-wrap">'
+            '<a href="/dash" class="feedback-back-btn">Voltar ao dashboard</a>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
         st.balloons()
 
     # ── Inicializa session state ──
