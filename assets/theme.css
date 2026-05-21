@@ -605,4 +605,80 @@ div[data-baseweb="select"] * { cursor: pointer !important; }
     letter-spacing: 0.04em;
 }
 
+/* ═══════════════════════════════════════════
+   PESQUISA DE FEEDBACK
+   ═══════════════════════════════════════════ */
+
+.feedback-header {
+    text-align: center;
+    padding: 1.5rem 1rem 0.5rem;
+}
+
+.feedback-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.35rem;
+    letter-spacing: -0.01em;
+}
+
+.feedback-subtitle {
+    font-size: 0.92rem;
+    color: var(--text-secondary);
+    max-width: 560px;
+    margin: 0 auto;
+    line-height: 1.5;
+}
+
+.feedback-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 1rem 0 1.2rem;
+}
+
+.feedback-block {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 1.2rem 1.3rem 1.3rem;
+    margin-bottom: 1rem;
+}
+
+.feedback-block-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--color-gold);
+    margin-bottom: 0.8rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(211,183,62,0.15);
+}
+
+.feedback-block-final {
+    border-color: rgba(211,183,62,0.25);
+}
+
+/* Selectbox e input feedback — herdam o estilo global mas ajustam espaçamento */
+.feedback-block .stSelectbox,
+.feedback-block .stTextInput {
+    margin-bottom: 0.3rem;
+}
+
+/* Botão de envio */
+div.stButton > button[kind="primary"] {
+    background: linear-gradient(135deg, #2c6b96 0%, #1a4d6e 100%) !important;
+    border: 1px solid var(--color-gold) !important;
+    color: var(--text-primary) !important;
+    font-weight: 600 !important;
+    padding: 0.6rem 2rem !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease;
+}
+
+div.stButton > button[kind="primary"]:hover {
+    background: linear-gradient(135deg, #357560 0%, #2c6b96 100%) !important;
+    border-color: #e8d56e !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(211,183,62,0.2);
+}
+
 </style>

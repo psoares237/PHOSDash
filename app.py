@@ -57,7 +57,7 @@ if os.path.exists(CFG.logo_sidebar):
     _logo_html = f'<img src="data:image/png;base64,{_logo_b64}" class="header-logo" />'
 else:
     _logo_html = '<span class="header-logo-text">PHOS</span>'
-_nome = pagina.replace("📊 ", "").replace("🎯 ", "").replace("💰 ", "")
+_nome = pagina.replace("📊 ", "").replace("🎯 ", "").replace("💰 ", "").replace("📋 ", "")
 st.markdown(
     f"""<div class="top-header">{_logo_html}<div class="top-header-info">
 <div class="top-header-brand">PHOSDash</div><div class="top-header-page">{_nome}</div>
@@ -70,8 +70,15 @@ PAGE_ROUTES = {
     "📊 Visão Geral Operacional": ("overview", "Overview"),
     "🎯 Visão Estratégica": ("receita", "Receita"),
     "💰 Visão Financeira": ("financeiro", "Financeiro"),
+    "📋 Pesquisa de Feedback": ("feedback", "Feedback"),
 }
 page_key, view_name = PAGE_ROUTES[pagina]
+
+# ── Página de Feedback (não precisa de dados nem filtros) ──
+if page_key == "feedback":
+    from views.Feedback import render as render_feedback
+    render_feedback(CFG)
+    st.stop()
 
 render_dimension_filters(page_key, df, CFG.dimensions_full)
 render_filter_bar(page_key)
