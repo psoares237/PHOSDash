@@ -12,6 +12,7 @@ st.set_page_config(page_title="PHOSDash", page_icon="", layout="wide", initial_s
 from core import Config, render_sidebar                                          # noqa: E402
 from components.ui import render_kpis                                            # noqa: E402
 from components.crossfilter import render_dimension_filters, render_filter_bar   # noqa: E402
+from state.filters import FilterState                                            # noqa: E402
 from services.page_engine import prepare_page_data                               # noqa: E402
 from services.alert_engine import AlertEngine, render_active_alerts              # noqa: E402
 from utils.formatters import fmt_currency, fmt_pct, fmt_int, pct_change          # noqa: E402
@@ -90,7 +91,32 @@ page_key, view_name = PAGE_ROUTES[pagina]
 
 render_dimension_filters(page_key, df, CFG.dimensions_full)
 render_filter_bar(page_key)
-ctx = prepare_page_data(df, previous_df, page_key)
+
+# Aplica cross-filtros antes de preparar os dados
+is_filtered = FilterState(page_key).has_filters
+current_df = FilterState(page_key).apply(df) if is_filtered else df
+ctx = prepare_page_data(current_df, previous_df, page_key, has_filters=is_filtered)
+
+# ══════════════════════════════════════════════════════════
+# Aviso: filtros incompatíveis (dados vazios após filtrar)
+# ══════════════════════════════════════════════════════════
+if ctx.current_df.empty and is_filtered:
+    st.markdown(
+        """<div style="background: linear-gradient(135deg, rgba(16,34,53,0.97), rgba(11,22,40,0.99));
+        border: 1px solid rgba(211,183,62,0.35); border-radius: 16px; padding: 36px 28px;
+        text-align: center; margin: 40px 0; max-width: 680px; margin-left: auto; margin-right: auto;">
+        <div style="font-size: 2.2rem; margin-bottom: 14px;">🔍</div>
+        <div style="font-size: 1.1rem; font-weight: 700; color: #F4F6F8; margin-bottom: 8px;">
+            Nenhum dado encontrado para esta combinação de filtros
+        </div>
+        <div style="font-size: 0.88rem; color: #AAB7C4; line-height: 1.6;">
+            Os filtros selecionados não retornaram resultados.<br>
+            Tente ajustar os critérios ou clique em <strong>🗑️ Limpar filtros</strong> para redefinir.
+        </div>
+        </div>""",
+        unsafe_allow_html=True,
+    )
+    st.stop()
 
 # ── Alert Engine ──
 alert_engine = AlertEngine()

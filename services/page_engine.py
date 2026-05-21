@@ -14,8 +14,7 @@ Responsabilidades:
 
 from dataclasses import dataclass, field
 import pandas as pd
-
-from state.filters import FilterState
+import streamlit as st
 
 
 @dataclass
@@ -55,32 +54,31 @@ class PageContext:
     has_filters: bool = False
 
 
+@st.cache_data(ttl=300, show_spinner=False)
 def prepare_page_data(
-    df: pd.DataFrame,
+    current_df: pd.DataFrame,
     previous_df: pd.DataFrame,
     page_key: str,
+    has_filters: bool = False,
 ) -> PageContext:
-    """Prepara todos os dados para uma página: filtros, agregações, totais.
+    """Prepara todos os dados para uma página: agregações, totais.
 
-    Replica exatamente a lógica que antes era repetida em cada bloco
-    de página do app.py. Quando há filtros ativos, usa o DataFrame
-    filtrado; quando o DataFrame filtrado está vazio, retorna
-    DataFrames vazios. Quando não há filtros, usa o DataFrame original.
+    O caller (app.py) já aplicou os cross-filtros no current_df.
+    Esta função é pura: recebe DataFrames e retorna PageContext,
+    sem dependência de session_state. Cacheada por 5 minutos.
 
     Args:
-        df:           DataFrame original (ano selecionado, sem cross-filter).
+        current_df:   DataFrame já filtrado (ou original, se sem filtros).
         previous_df:  DataFrame do período anterior.
         page_key:     Identificador da página (ex: "overview").
+        has_filters:  Se há cross-filtros ativos nesta página.
 
     Returns:
-        PageContext com todos os dados prontos.
+        PageContext com todos os dados prontos para a view.
     """
-    is_filtered = FilterState(page_key).has_filters
-    current_df = FilterState(page_key).apply(df) if is_filtered else df
-
     # Lazy imports — evita conflito com @st.cache_data no runtime do Streamlit
     from services.analytics_service import (
-        grouped_sales, monthly_sales, recompute_total, recompute_aggregations, top_share,
+        grouped_sales, monthly_sales, recompute_total, top_share,
     )
 
     # Guarda: DataFrame vazio ou sem colunas essenciais
@@ -97,7 +95,7 @@ def prepare_page_data(
         vendedor=pd.DataFrame(),
         produto=pd.DataFrame(),
         page_key=page_key,
-        has_filters=is_filtered,
+        has_filters=has_filters,
     )
 
     if current_df.empty or not required_cols.issubset(current_df.columns):
@@ -107,36 +105,26 @@ def prepare_page_data(
     current_total = recompute_total(current_df)
     previous_total = recompute_total(previous_df)
 
-    # Agregações: usa dados filtrados se houver filtro,
-    # ou dados originais se não houver.
-    # Se o DataFrame filtrado está vazio, retorna DataFrames vazios.
-    if is_filtered:
-        working_df = current_df
-        if working_df.empty:
-            monthly = pd.DataFrame()
-            cat = pd.DataFrame()
-            canal = pd.DataFrame()
-            regiao = pd.DataFrame()
-            vendedor = pd.DataFrame()
-            produto = pd.DataFrame()
-        else:
-            monthly = monthly_sales(working_df)
-            cat = grouped_sales(working_df, "Categoria")
-            canal = grouped_sales(working_df, "Canal_Venda")
-            regiao = grouped_sales(working_df, "Regiao")
-            vendedor = grouped_sales(working_df, "Vendedor")
-            produto = grouped_sales(working_df, "Produto")
+    # Agregações (current_df já está filtrado ou é o original)
+    working_df = current_df
+    if working_df.empty:
+        monthly = pd.DataFrame()
+        cat = pd.DataFrame()
+        canal = pd.DataFrame()
+        regiao = pd.DataFrame()
+        vendedor = pd.DataFrame()
+        produto = pd.DataFrame()
     else:
-        monthly = monthly_sales(df)
-        cat = grouped_sales(df, "Categoria")
-        canal = grouped_sales(df, "Canal_Venda")
-        regiao = grouped_sales(df, "Regiao")
-        vendedor = grouped_sales(df, "Vendedor")
-        produto = grouped_sales(df, "Produto")
+        monthly = monthly_sales(working_df)
+        cat = grouped_sales(working_df, "Categoria")
+        canal = grouped_sales(working_df, "Canal_Venda")
+        regiao = grouped_sales(working_df, "Regiao")
+        vendedor = grouped_sales(working_df, "Vendedor")
+        produto = grouped_sales(working_df, "Produto")
 
     # Top canal (share)
     top_channel_name, top_channel_share = top_share(
-        canal if not canal.empty else (current_df if not current_df.empty else df), "Canal_Venda"
+        canal if not canal.empty else current_df, "Canal_Venda"
     )
 
     return PageContext(
@@ -153,5 +141,5 @@ def prepare_page_data(
         top_channel_name=top_channel_name,
         top_channel_share=top_channel_share,
         page_key=page_key,
-        has_filters=is_filtered,
+        has_filters=has_filters,
     )
