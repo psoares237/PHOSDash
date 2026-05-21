@@ -6,6 +6,14 @@
    verde #357560, verde escuro #384727, claro #ece8e6
    ═══════════════════════════════════════════ */
 
+/* Esconde barra nativa do Streamlit (já temos header customizado) */
+header[data-testid="stHeader"] {
+    display: none !important;
+}
+[data-testid="stToolbar"] {
+    display: none !important;
+}
+
 :root {
     --color-primary: #2c6b96;
     --color-gold: #d3b73e;
@@ -42,7 +50,7 @@ html, body, [class*="css"] {
 }
 
 .block-container {
-    padding-top: 1rem;
+    padding-top: 2rem;
     padding-bottom: 2rem;
 }
 
