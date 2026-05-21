@@ -67,17 +67,14 @@ else:
     previous_df = full_df[full_df["Data"].dt.year == df["Data"].dt.year.max() - 1]
 
 # ── Header ──
-if os.path.exists(CFG.logo_sidebar):
-    with open(CFG.logo_sidebar, "rb") as _lf:
-        _logo_b64 = base64.b64encode(_lf.read()).decode()
-    _logo_html = f'<img src="data:image/png;base64,{_logo_b64}" class="header-logo" />'
-else:
-    _logo_html = '<span class="header-logo-text">PHOS</span>'
 _nome = pagina.replace("📊 ", "").replace("🎯 ", "").replace("💰 ", "")
 st.markdown(
-    f"""<div class="top-header">{_logo_html}<div class="top-header-info">
+    f"""<div class="top-header">
 <div class="top-header-page">{_nome}</div>
-</div><a href="?page=feedback" class="feedback-header-btn">📋 Feedback</a></div>""", unsafe_allow_html=True,
+</div>
+<div class="top-header-feedback-row">
+<a href="?page=feedback" class="feedback-header-btn">📋 Feedback</a>
+</div>""", unsafe_allow_html=True,
 )
 st.markdown("---")
 
@@ -111,11 +108,14 @@ if ctx.current_df.empty and is_filtered:
         </div>
         <div style="font-size: 0.88rem; color: #AAB7C4; line-height: 1.6;">
             Os filtros selecionados não retornaram resultados.<br>
-            Tente ajustar os critérios ou clique em <strong>🗑️ Limpar filtros</strong> para redefinir.
+            Tente ajustar os critérios ou clique em <strong>Limpar filtros</strong> para redefinir.
         </div>
         </div>""",
         unsafe_allow_html=True,
     )
+    if st.button("🗑️ Limpar filtros", key="clear_empty_filters"):
+        FilterState(page_key).clear_all()
+        st.rerun()
     st.stop()
 
 # ── Alert Engine ──
