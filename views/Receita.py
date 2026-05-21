@@ -92,8 +92,12 @@ def render(ctx):
                         y=mom_data["MoM_Receita"],
                         marker_color=mom_colors,
                         marker_line_width=0,
-                        customdata=mom_data["MesLabel"].tolist(),
-                        hovertemplate="%{x}: %{y:+.2f}%<extra></extra>",
+                        customdata=mom_data[["MesLabel", "Receita_YoY_Pct", "MoM_Proximo_Mes"]].values.tolist(),
+                        hovertemplate=(
+                            "%{x}: MoM %{y:+.2f}%<br>"
+                            "YoY %{customdata[1]:+.2f}%<br>"
+                            "Próx. %{customdata[2]:+.2f}%<extra></extra>"
+                        ),
                     )
                 )
                 fig_var.add_hline(
@@ -119,8 +123,8 @@ def render(ctx):
                     dimension="MesLabel",
                     description=(
                         "Barras verdes = crescimento, vermelhas = retração. "
-                        "A linha tracejada marca o zero. Detecte aceleração, "
-                        "desaceleração ou reversão de tendência."
+                        "Hover mostra MoM, YoY (mesmo mês ano anterior) e Próx. (mês seguinte). "
+                        "A linha tracejada marca o zero."
                     ),
                 )
 
@@ -140,8 +144,12 @@ def render(ctx):
                         y=yoy_data["Receita_YoY_Pct"],
                         marker_color=yoy_colors,
                         marker_line_width=0,
-                        customdata=yoy_data["MesLabel"].tolist(),
-                        hovertemplate="%{x}: %{y:+.2f}%<extra></extra>",
+                        customdata=yoy_data[["MesLabel", "MoM_Receita", "MoM_Proximo_Mes"]].values.tolist(),
+                        hovertemplate=(
+                            "%{x}: YoY %{y:+.2f}%<br>"
+                            "MoM %{customdata[1]:+.2f}%<br>"
+                            "Próx. %{customdata[2]:+.2f}%<extra></extra>"
+                        ),
                     )
                 )
                 fig_var.add_hline(
@@ -168,7 +176,7 @@ def render(ctx):
                     description=(
                         "Comparação com o mesmo mês do ano anterior. "
                         "Barras verdes = crescimento YoY, vermelhas = retração. "
-                        "Identifique tendências de longo prazo e sazonalidade."
+                        "Hover mostra YoY, MoM (variação mensal) e Próx. (mês seguinte)."
                     ),
                 )
 
