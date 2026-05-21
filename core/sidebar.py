@@ -114,6 +114,42 @@ def render_sidebar(config: Config) -> dict[str, Any]:
 
     st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
 
+    # ── Navegação (bloco no topo) ──
+    st.markdown(
+        """<div class="sidebar-period">
+<div class="period-label">🧭 Navegação</div>
+</div>""",
+        unsafe_allow_html=True,
+    )
+
+    nav_labels = [
+        "📊 Visão Operacional",
+        "🎯 Visão Estratégica",
+        "💰 Visão Financeira",
+    ]
+
+    pagina = st.selectbox(
+        "Página",
+        nav_labels,
+        label_visibility="collapsed",
+        key="nav_pagina",
+    )
+
+    # Links para abrir em nova aba
+    page_links = {
+        "📊 Visão Operacional": "?page=overview",
+        "🎯 Visão Estratégica": "?page=estrategica",
+        "💰 Visão Financeira": "?page=financeira",
+    }
+    st.markdown(
+        f"""<div style="margin-top:6px;font-size:0.65rem;color:#5A6F86;text-align:center;">
+        🔗 <a href="{page_links[pagina]}" target="_blank" style="color:#7B8FA8;text-decoration:none;">
+        Abrir em nova aba</a></div>""",
+        unsafe_allow_html=True,
+    )
+
+    st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
+
     # ── Carregamento de dados ──
     df = load_data(config.dados_oficiais)
 
@@ -176,22 +212,6 @@ def render_sidebar(config: Config) -> dict[str, Any]:
 </div>""",
             unsafe_allow_html=True,
         )
-
-    st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
-
-    # ── Navegação ──
-    nav_labels = [
-        "📊 Visão Geral Operacional",
-        "🎯 Visão Estratégica",
-        "💰 Visão Financeira",
-    ]
-
-    pagina = st.radio(
-        "",
-        nav_labels,
-        label_visibility="collapsed",
-        key="nav_pagina",
-    )
 
     st.markdown('<div class="sidebar-divider"></div>', unsafe_allow_html=True)
 

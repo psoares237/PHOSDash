@@ -30,6 +30,15 @@ if st.query_params.get("page") == "feedback":
     render_feedback(CFG)
     st.stop()
 
+# ── Query params para abrir páginas direto (nova aba) ──
+qp = st.query_params.get("page")
+if qp == "overview":
+    st.session_state.nav_pagina = "📊 Visão Operacional"
+elif qp == "estrategica":
+    st.session_state.nav_pagina = "🎯 Visão Estratégica"
+elif qp == "financeira":
+    st.session_state.nav_pagina = "💰 Visão Financeira"
+
 # ── Watermark ──
 if os.path.exists(CFG.bg_watermark):
     with open(CFG.bg_watermark, "rb") as _f:
@@ -66,14 +75,14 @@ else:
 _nome = pagina.replace("📊 ", "").replace("🎯 ", "").replace("💰 ", "")
 st.markdown(
     f"""<div class="top-header">{_logo_html}<div class="top-header-info">
-<div class="top-header-brand">PHOSDash</div><div class="top-header-page">{_nome}</div>
+<div class="top-header-page">{_nome}</div>
 </div><a href="?page=feedback" class="feedback-header-btn">📋 Feedback</a></div>""", unsafe_allow_html=True,
 )
 st.markdown("---")
 
 # ── Páginas ──
 PAGE_ROUTES = {
-    "📊 Visão Geral Operacional": ("overview", "Overview"),
+    "📊 Visão Operacional": ("overview", "Overview"),
     "🎯 Visão Estratégica": ("receita", "Receita"),
     "💰 Visão Financeira": ("financeiro", "Financeiro"),
 }
