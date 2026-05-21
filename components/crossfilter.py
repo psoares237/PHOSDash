@@ -77,20 +77,24 @@ def render_filter_bar(page_key: str):
     """Renderiza barra de filtros ativos com badges e botão limpar."""
     fs = FilterState(page_key)
 
+    # Processa limpeza individual via query param
+    clear_col = st.query_params.get("clear_col")
+    if clear_col:
+        fs.clear(clear_col)
+        st.query_params.clear()
+        st.rerun()
+
     st.markdown("---")
     if fs.has_filters:
-        # Badges + × inline (sem colunas, para evitar bug de rerun)
+        # Badges com link × para limpar individualmente
         for col_name, val in fs.filters.items():
-            c1, c2 = st.columns([20, 1])
-            with c1:
-                st.markdown(
-                    f'<span class="cf-badge">🏷️ <strong>{col_name}</strong>: {val}</span>',
-                    unsafe_allow_html=True,
-                )
-            with c2:
-                if st.button("✕", key=f"cf_x_{page_key}_{col_name}", help=f"Remover {col_name}"):
-                    fs.clear(col_name)
-                    st.rerun()
+            base_url = st.query_params.get("page", "")
+            page_qs = f"?page={base_url}&" if base_url else "?"
+            st.markdown(
+                f'<span class="cf-badge">🏷️ <strong>{col_name}</strong>: {val} '
+                f'<a href="{page_qs}clear_col={col_name}" style="color:#F87171;text-decoration:none;font-weight:bold;">✕</a></span>',
+                unsafe_allow_html=True,
+            )
 
         # Botão Limpar Todos
         if st.button("🗑️ Limpar Todos", key=f"cf_clear_{page_key}"):
