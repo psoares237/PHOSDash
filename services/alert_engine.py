@@ -329,6 +329,7 @@ def render_active_alerts(alerts: list[Alert]) -> None:
         '<div class="alert-section-title">🚨 Alertas Ativos</div>',
         unsafe_allow_html=True,
     )
+    st.markdown("<br>", unsafe_allow_html=True)
 
     # Grid 2 colunas x N linhas
     n = len(alerts)
