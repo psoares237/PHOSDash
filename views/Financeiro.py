@@ -210,7 +210,7 @@ f"Média geral: {margem_contrib_pct:.1f}%, após frete.",
 
                 chart_block(
                     "Correlação: Desconto × Margem",
-f"r = {corr['global_r']:.2f}, {corr['insight'][:120]}...",
+                    f"r = {corr['global_r']:.2f}. {corr['insight']}",
                     fig_corr,
                     description=(
                         "Cada ponto = 1 pedido. Correlação negativa sugere que "

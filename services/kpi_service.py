@@ -133,7 +133,9 @@ def desconto_margem_correlation(df: pd.DataFrame) -> dict:
     else:
         insight = (
             f"Sem correlação significativa (r={global_r:.2f}): "
-            "política de desconto não é o principal driver de margem."
+            "a política de desconto não é o principal fator que explica "
+            "a margem. Outros elementos como custo do produto, frete e "
+            "volume de vendas têm mais influência no resultado."
         )
 
     return {
