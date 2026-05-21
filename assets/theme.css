@@ -34,7 +34,7 @@ button[title="Feedback"], button[kind="header"] {
     --bg-main: #081421;
     --bg-card: #102235;
     --bg-sidebar: #0b1b2b;
-    --border-color: rgba(255,255,255,0.08);
+    --border-color: rgba(211,183,62,0.12);
     --text-primary: #F7FAFC;
     --text-secondary: #AAB7C4;
     --red: #F87171;
@@ -122,7 +122,7 @@ section[data-testid="stSidebar"] ::-webkit-scrollbar-thumb { background: rgba(21
 .sidebar-divider {
     border: none;
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+    background: linear-gradient(90deg, transparent, rgba(211,183,62,0.10), transparent);
     margin: 0.6rem 0;
 }
 
@@ -172,7 +172,7 @@ section[data-testid="stSidebar"] ::-webkit-scrollbar-thumb { background: rgba(21
     display: flex; align-items: center; justify-content: center;
     font-size: 0.7rem; font-weight: 700;
     background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.08);
+    border: 1px solid rgba(211,183,62,0.12);
     color: #7B8FA8;
 }
 .stepper-item.active .stepper-number {
@@ -326,7 +326,7 @@ section[data-testid="stSidebar"] .stSelectbox:first-of-type div[data-baseweb="se
     display: flex; align-items: center; gap: 10px;
     margin-bottom: 18px;
     padding-bottom: 14px;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 1px solid rgba(211,183,62,0.12);
 }
 .exec-card .exec-header-icon { font-size: 1.3rem; }
 .exec-card .exec-header-title { font-weight: 800; font-size: 1.1rem; color: #F4F6F8; }
@@ -369,7 +369,7 @@ section[data-testid="stSidebar"] .stSelectbox:first-of-type div[data-baseweb="se
     border-radius: 50%;
     min-width: 12px;
 }
-.exec-dot.good  { background: #2ecc71; box-shadow: 0 0 12px rgba(46,204,113,0.5); }
+.exec-dot.good  { background: var(--color-green); box-shadow: 0 0 12px rgba(53,117,96,0.5); }
 .exec-dot.warn  { background: var(--color-gold); box-shadow: 0 0 12px rgba(211,183,62,0.5); }
 .exec-dot.bad   { background: var(--red); box-shadow: 0 0 12px rgba(248,113,113,0.5); }
 .exec-dot.info  { background: var(--color-primary); box-shadow: 0 0 12px rgba(44,107,150,0.5); }
@@ -601,61 +601,45 @@ div[data-baseweb="select"] svg { fill: var(--color-gold) !important; }
 div[data-baseweb="select"] * { cursor: pointer !important; }
 
 /* ═══════════════════════════════════════════
-   HEADER — Logo miniatura + nome da página
+   HEADER — nome da página + botão feedback
    ═══════════════════════════════════════════ */
 .top-header {
     display: flex;
-    align-items: center;
-    gap: 16px;
-    padding: 4px 0 10px;
-}
-.header-logo {
-    height: 42px;
-    width: auto;
-    max-width: 120px;
-    flex-shrink: 0;
-    border-radius: 6px;
-    object-fit: contain;
-}
-.top-header-info {
-    display: flex;
     flex-direction: column;
-    gap: 2px;
-    flex: 1;
     align-items: center;
-}
-.top-header-brand {
-    font-size: 1.1rem;
-    font-weight: 800;
-    color: var(--text-primary);
-    letter-spacing: -0.02em;
+    padding: 4px 0 6px;
 }
 .top-header-page {
-    font-size: 0.95rem;
-    font-weight: 600;
+    font-size: 1.5rem;
+    font-weight: 800;
     color: var(--color-gold);
-    letter-spacing: 0.04em;
+    letter-spacing: -0.02em;
+}
+.top-header-feedback-row {
+    display: flex;
+    justify-content: center;
+    padding: 6px 0 10px;
 }
 .feedback-header-btn {
-    padding: 10px 28px;
-    background: linear-gradient(135deg, var(--color-primary), #1a5276);
+    padding: 8px 24px;
+    background: linear-gradient(135deg, rgba(44,107,150,0.30), rgba(26,82,118,0.25));
     color: var(--text-primary);
     border-radius: 10px;
-    font-size: 0.95rem;
-    font-weight: 700;
+    font-size: 0.85rem;
+    font-weight: 600;
     text-decoration: none;
     letter-spacing: 0.03em;
     transition: all 0.25s ease;
-    border: 2px solid rgba(211,183,62,0.4);
+    border: 1px solid rgba(211,183,62,0.25);
     white-space: nowrap;
     flex-shrink: 0;
-    box-shadow: 0 2px 12px rgba(44,107,150,0.3);
+    box-shadow: 0 2px 8px rgba(44,107,150,0.15);
 }
 .feedback-header-btn:hover {
-    background: linear-gradient(135deg, #3a8bc0, var(--color-primary));
+    background: linear-gradient(135deg, rgba(58,139,192,0.40), rgba(44,107,150,0.35));
     border-color: var(--color-gold);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(44,107,150,0.5);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(44,107,150,0.30);
     text-decoration: none;
     color: #fff;
 }
