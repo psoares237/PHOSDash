@@ -4,6 +4,8 @@ __pycache__/
 *.pyc
 .env
 .streamlit/secrets.toml
+google_service_account.json
+*service_account*.json
 .DS_Store
 *.log
 ~$*

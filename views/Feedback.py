@@ -5,6 +5,7 @@ Respostas salvas em /opt/PHOSDash/data/feedback.csv (append).
 """
 
 import csv
+import json
 import os
 import shutil
 from datetime import datetime, timezone
@@ -49,8 +50,71 @@ def _safe_index(opcoes: list, valor: str) -> int:
         return 0
 
 
-def _salvar_resposta(dados: dict) -> None:
-    """Salva uma linha no CSV de feedback (append). Cria arquivo + header se necessário."""
+def _get_google_sheets_config() -> dict:
+    """Lê configuração do Google Sheets via secrets ou variáveis de ambiente."""
+    secrets = {}
+    try:
+        secrets = dict(st.secrets.get("google_sheets", {}))
+    except Exception:
+        secrets = {}
+
+    return {
+        "sheet_id": secrets.get("sheet_id") or os.getenv("GOOGLE_SHEETS_ID", ""),
+        "worksheet": secrets.get("worksheet") or os.getenv("GOOGLE_SHEETS_WORKSHEET", "Feedback"),
+        "service_account_file": (
+            secrets.get("service_account_file")
+            or os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE", "")
+        ),
+        "service_account_json": (
+            secrets.get("service_account_json")
+            or os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON", "")
+        ),
+    }
+
+
+def _append_google_sheets(dados: dict) -> tuple[bool, bool, str]:
+    """Envia a resposta para Google Sheets quando a integração estiver configurada."""
+    config = _get_google_sheets_config()
+    sheet_id = config["sheet_id"]
+    worksheet_name = config["worksheet"]
+    service_account_file = config["service_account_file"]
+    service_account_json = config["service_account_json"]
+
+    if not sheet_id or not (service_account_file or service_account_json):
+        return False, False, "Google Sheets não configurado."
+
+    try:
+        import gspread
+
+        if service_account_json:
+            credentials_info = json.loads(service_account_json)
+            client = gspread.service_account_from_dict(credentials_info)
+        else:
+            client = gspread.service_account(filename=service_account_file)
+
+        spreadsheet = client.open_by_key(sheet_id)
+        try:
+            worksheet = spreadsheet.worksheet(worksheet_name)
+        except gspread.WorksheetNotFound:
+            worksheet = spreadsheet.add_worksheet(
+                title=worksheet_name,
+                rows=1000,
+                cols=len(FEEDBACK_FIELDS),
+            )
+
+        header = worksheet.row_values(1)
+        if header != FEEDBACK_FIELDS:
+            worksheet.update("A1", [FEEDBACK_FIELDS])
+
+        row = [dados.get(field, "") for field in FEEDBACK_FIELDS]
+        worksheet.append_row(row, value_input_option="USER_ENTERED")
+        return True, True, "Feedback enviado ao Google Sheets."
+    except Exception as exc:
+        return True, False, f"Feedback salvo localmente, mas falhou no Google Sheets: {exc}"
+
+
+def _salvar_resposta(dados: dict) -> tuple[bool, bool, str]:
+    """Salva uma linha no CSV e, se configurado, replica no Google Sheets."""
     os.makedirs(os.path.dirname(FEEDBACK_CSV), exist_ok=True)
     existe = os.path.isfile(FEEDBACK_CSV)
     mode = "a"
@@ -75,6 +139,8 @@ def _salvar_resposta(dados: dict) -> None:
         if not existe:
             writer.writeheader()
         writer.writerow(dados)
+
+    return _append_google_sheets(dados)
 
 
 # ── Helpers para selectbox com "Outro" ──
@@ -129,6 +195,13 @@ def render(cfg: Config) -> None:
 
     if st.session_state.pop("fb_submitted", False):
         st.success("Feedback registrado com sucesso. Obrigado por contribuir com a evolução do PHOSDash.")
+        google_sync_message = st.session_state.pop("fb_google_sync_message", "")
+        google_sync_ok = st.session_state.pop("fb_google_sync_ok", None)
+        if google_sync_message:
+            if google_sync_ok:
+                st.info(google_sync_message)
+            else:
+                st.warning(google_sync_message)
         st.balloons()
 
     # ── Inicializa session state ──
@@ -312,10 +385,13 @@ def render(cfg: Config) -> None:
                 "q12_opiniao_sugestao": st.session_state.fb_q12,
             }
 
-            _salvar_resposta(dados)
+            google_configured, google_ok, google_message = _salvar_resposta(dados)
 
             # Limpa o formulário
             st.session_state.fb_submitted = True
+            if google_configured:
+                st.session_state.fb_google_sync_ok = google_ok
+                st.session_state.fb_google_sync_message = google_message
             st.session_state.fb_email = ""
             for i in range(1, 13):
                 st.session_state[f"fb_q{i}"] = ""
