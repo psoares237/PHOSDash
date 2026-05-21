@@ -671,24 +671,24 @@ div[data-baseweb="select"] * { cursor: pointer !important; }
 
 .feedback-divider {
     height: 1px;
-    background: var(--border-color);
-    margin: 1rem 0 1.2rem;
+    background: rgba(211,183,62,0.15);
+    margin: 1.2rem 0 1.5rem;
 }
 
 .feedback-block {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: 10px;
-    padding: 1.2rem 1.3rem 1.3rem;
-    margin-bottom: 1rem;
+    padding: 1.5rem 1.5rem 1.8rem;
+    margin-bottom: 1.5rem;
 }
 
 .feedback-block-title {
     font-size: 1.05rem;
     font-weight: 700;
     color: var(--color-gold);
-    margin-bottom: 0.8rem;
-    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.6rem;
     border-bottom: 1px solid rgba(211,183,62,0.15);
 }
 
@@ -699,7 +699,7 @@ div[data-baseweb="select"] * { cursor: pointer !important; }
 /* Selectbox e input feedback — herdam o estilo global mas ajustam espaçamento */
 .feedback-block .stSelectbox,
 .feedback-block .stTextInput {
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.8rem;
 }
 
 /* Botão de envio */
