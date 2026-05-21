@@ -120,7 +120,7 @@ def render(ctx):
 
             chart_block(
                 "Margem de Contribuição por Categoria",
-                f"Média geral: {margem_contrib_pct:.1f}% — após frete.",
+f"Média geral: {margem_contrib_pct:.1f}%, após frete.",
                 fig_mc,
                 page_key=page_key,
                 dimension="Categoria",
@@ -210,12 +210,12 @@ def render(ctx):
 
                 chart_block(
                     "Correlação: Desconto × Margem",
-                    f"r = {corr['global_r']:.2f} — {corr['insight'][:80]}...",
+f"r = {corr['global_r']:.2f}, {corr['insight'][:120]}...",
                     fig_corr,
                     description=(
                         "Cada ponto = 1 pedido. Correlação negativa sugere que "
                         "descontos maiores reduzem a margem. Bolhas à direita "
-                        "e abaixo indicam canais com alto desconto e baixa margem — "
+"e abaixo indicam canais com alto desconto e baixa margem, "
                         "candidatos a otimização comercial."
                     ),
                 )
@@ -333,7 +333,7 @@ def render(ctx):
                     description=(
                         "HHI < 1500: diversificado (verde). "
                         "1500-2500: moderado (amarelo). "
-                        "> 2500: concentrado (vermelho) — risco de dependência. "
+"> 2500: concentrado (vermelho), risco de dependência. "
                         "Priorize ações para reduzir concentração nas dimensões em vermelho."
                     ),
                 )
@@ -599,14 +599,14 @@ def render(ctx):
             fig_pareto = clean_figure(fig_pareto, height=440)
 
             chart_block(
-                "Pareto de Produtos — Regra 80/20",
+"Pareto de Produtos: Regra 80/20",
                 f"{top_80_count} produtos concentram 80% da receita ({len(pareto_df)} analisados).",
                 fig_pareto,
                 page_key=page_key,
                 dimension="Produto",
                 description=(
                     "O Princípio de Pareto revela que poucos produtos geram a maior "
-                    "parte da receita. Produtos em azul compõem os 80% acumulados — "
+"parte da receita. Produtos em azul compõem os 80% acumulados, "
                     "priorize estoque, marketing e negociação para este grupo. Produtos "
                     "à direita da linha de 80% são candidatos a revisão de sortimento "
                     "ou descontinuação."
@@ -675,7 +675,7 @@ def render(ctx):
                 )
 
                 chart_block(
-                    "Top 10 — Menor Margem (Risco)",
+"Top 10: Menor Margem (Risco)",
                     risco_subtitle,
                     fig_risco,
                     page_key=page_key,
@@ -683,7 +683,7 @@ def render(ctx):
                     description=(
                         "Produtos com menor margem unitária percentual. "
                         "Margens negativas (abaixo de 0%) indicam prejuízo "
-                        "por unidade — candidatos urgentes a revisão de preço, "
+"por unidade, candidatos urgentes a revisão de preço, "
                         "redução de custo ou descontinuação."
                     ),
                 )
@@ -740,7 +740,7 @@ def render(ctx):
                 )
 
                 chart_block(
-                    "Top 10 — Maior Margem (Destaque)",
+"Top 10: Maior Margem (Destaque)",
                     destaque_subtitle,
                     fig_destaque,
                     page_key=page_key,
@@ -748,7 +748,7 @@ def render(ctx):
                     description=(
                         "Produtos com maior margem unitária percentual. "
                         "Margens acima de 50% representam alta rentabilidade "
-                        "por unidade — candidatos a investimento em marketing, "
+"por unidade, candidatos a investimento em marketing, "
                         "estoque e expansão de canais."
                     ),
                 )
