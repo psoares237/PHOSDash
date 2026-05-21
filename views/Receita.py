@@ -258,9 +258,10 @@ def render(ctx):
             fig_ll.update_traces(
                 texttemplate="R$ %{text:,.2s}",
                 textposition="outside",
-                customdata=canal_ll["Canal_Venda"].tolist(),
+                customdata=canal_ll[["Canal_Venda", "Receita"]].values.tolist(),
                 hovertemplate=(
                     "%{x}<br>Lucro Líquido: R$ %{y:,.2f}<br>"
+                    "Receita: R$ %{customdata[1]:,.2f}<br>"
                     "Margem: %{marker.color:.2f}%<extra></extra>"
                 ),
                 marker=dict(
